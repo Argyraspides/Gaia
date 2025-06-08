@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://dxf3hyep4y3iu"]
+[gd_scene load_steps=7 format=3 uid="uid://dxf3hyep4y3iu"]
 
 [ext_resource type="Texture2D" uid="uid://bhjk68tdfdt1l" path="res://SolarSystem/Assets/ESO_-_Milky_Way.jpg" id="1_up5bf"]
 [ext_resource type="Script" uid="uid://b8mwhumswdquq" path="res://SolarSystem/Scenes/SolarSystem/SolarSystem.cs" id="2_obgtn"]
@@ -13,6 +13,11 @@ sky_material = SubResource("PanoramaSkyMaterial_aw4tg")
 background_mode = 2
 sky = SubResource("Sky_bhxmi")
 
+[sub_resource type="PlaneMesh" id="PlaneMesh_up5bf"]
+
 [node name="SolarSystem" type="WorldEnvironment"]
 environment = SubResource("Environment_xash6")
 script = ExtResource("2_obgtn")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("PlaneMesh_up5bf")
