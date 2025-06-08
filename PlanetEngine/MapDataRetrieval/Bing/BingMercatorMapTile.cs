@@ -17,11 +17,13 @@
 
 */
 
-using Hermes.Common.Types;
+using Gaia.Common;
+using Gaia.Common.Enums;
+using Gaia.Common.Utils.Images;
+using Gaia.PlanetEngine.MapTiles;
+using Gaia.PlanetEngine.Utils;
 
-namespace Hermes.Common.Map.Types.Bing;
-
-using Hermes.Common.Map.Utils;
+namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
 
 public class BingMercatorMapTile : MapTile
 {
@@ -53,13 +55,13 @@ public class BingMercatorMapTile : MapTile
         ZoomLevel = quadKey.Length;
 
         // Convert tile coordinates to lat/lon
-        (Latitude, Longitude, ZoomLevel) = MapUtils.QuadKeyToLatLonAndZoom(quadKey);
+        (Latitude, Longitude, ZoomLevel) = PlanetUtils.QuadKeyToLatLonAndZoom(quadKey);
 
-        LatitudeTileCoo = MapUtils.LatitudeToTileCoordinateMercator(Latitude, ZoomLevel);
-        LongitudeTileCoo = MapUtils.LongitudeToTileCoordinateMercator(Longitude, ZoomLevel);
+        LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(Latitude, ZoomLevel);
+        LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(Longitude, ZoomLevel);
 
-        LatitudeRange = MapUtils.TileToLatRange(LatitudeTileCoo, ZoomLevel);
-        LongitudeRange = MapUtils.TileToLonRange(LongitudeTileCoo);
+        LatitudeRange = PlanetUtils.TileToLatRange(LatitudeTileCoo, ZoomLevel);
+        LongitudeRange = PlanetUtils.TileToLonRange(LongitudeTileCoo);
 
         if (imageData != null)
         {

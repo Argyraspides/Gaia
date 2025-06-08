@@ -17,9 +17,9 @@
 
 */
 
-namespace Hermes.Common.Networking.HTTP;
-
 using System.Collections.Generic;
+
+namespace Gaia.Common.Utils.Networking.HTTP;
 
 /// <summary>
 /// This interface defines the contract for any class that wants to represent query parameters

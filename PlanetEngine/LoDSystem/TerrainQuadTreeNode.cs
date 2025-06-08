@@ -16,11 +16,11 @@
 
 */
 
-namespace Hermes.Common.Planet.LoDSystem;
 
 using System;
+using Gaia.Common.Utils.Godot;
+using Gaia.PlanetEngine.LoDSystem;
 using Godot;
-using HermesUtils;
 
 /// <summary>
 /// An individual node in a quadtree structure meant to represent TerrainChunks.
@@ -49,7 +49,7 @@ public sealed partial class TerrainQuadTreeNode : Node3D
 
         for (int i = 0; i < ChildNodes.Length; i++)
         {
-            if (!HermesUtils.IsValid(ChildNodes[i])) { return false; }
+            if (!GodotUtils.IsValid(ChildNodes[i])) { return false; }
         }
 
         return true;

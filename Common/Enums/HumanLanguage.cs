@@ -1,4 +1,4 @@
-namespace Gaia.Common;
+namespace Gaia.Common.Enums;
 
 /// <summary>
 /// Different external providers may use different language codes,

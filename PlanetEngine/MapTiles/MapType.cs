@@ -17,7 +17,7 @@
 
 */
 
-namespace Hermes.Common.Map.Types;
+namespace Gaia.PlanetEngine.MapTiles;
 
 public enum MapType
 {

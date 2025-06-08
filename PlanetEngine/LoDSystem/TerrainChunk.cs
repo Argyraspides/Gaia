@@ -16,16 +16,16 @@
 
 */
 
-using Hermes.Common.Map.Querying;
-using Hermes.Common.Map.Types;
-using Hermes.Common.Map.Utils;
-
-namespace Hermes.Common.Planet.LoDSystem;
-
 using System;
 using System.Threading.Tasks;
+using Gaia.Common.Utils.Godot;
+using Gaia.Common.Utils.Logging;
+using Gaia.PlanetEngine.MapDataRetrieval;
+using Gaia.PlanetEngine.MapTiles;
+using Gaia.PlanetEngine.Utils;
 using Godot;
-using HermesUtils;
+
+namespace Gaia.PlanetEngine.LoDSystem;
 
 /// <summary>
 /// Represents a single chunk of planetary terrain in a quadtree structure.
@@ -101,7 +101,7 @@ public partial class TerrainChunk : Node3D
     {
         try
         {
-            if (HermesUtils.IsValid(TerrainChunkMesh))
+            if (GodotUtils.IsValid(TerrainChunkMesh))
             {
                 AddChild(TerrainChunkMesh);
                 await InitializeTerrainChunkAsync();
@@ -135,7 +135,7 @@ public partial class TerrainChunk : Node3D
             shaderMat.SetShaderParameter("tile_width", MapTile.Width);
             shaderMat.SetShaderParameter("tile_height", MapTile.Height);
 
-            if (HermesUtils.IsValid(TerrainChunkMesh))
+            if (GodotUtils.IsValid(TerrainChunkMesh))
             {
                 TerrainChunkMesh.MaterialOverride = shaderMat;
             }
@@ -146,10 +146,10 @@ public partial class TerrainChunk : Node3D
         }
         else
         {
-            HermesUtils.HermesLogWarning("Shader material path is null or empty! Using default shader.");
+            Logger.LogWarning("Shader material path is null or empty! Using default shader.");
             var standardShader = new StandardMaterial3D();
             standardShader.SetName("TerrainChunkStandardShader");
-            if (HermesUtils.IsValid(TerrainChunkMesh))
+            if (GodotUtils.IsValid(TerrainChunkMesh))
             {
                 TerrainChunkMesh.MaterialOverride = standardShader;
             }
@@ -162,8 +162,7 @@ public partial class TerrainChunk : Node3D
 
     private async Task InitializeTerrainChunkAsync()
     {
-        var mapApi = new MapAPI();
-        MapTile mapTile = await mapApi.RequestMapTileAsync(
+        MapTile mapTile = await MapAPI.RequestMapTileAsync(
             (float)MapTile.Latitude,
             (float)MapTile.Longitude,
             MapTile.ZoomLevel,
@@ -182,26 +181,7 @@ public partial class TerrainChunk : Node3D
 
     public void SetPositionAndSize()
     {
-        if (MapTile == null)
-        {
-            throw new ArgumentNullException("Cannot set position of a terrain chunk with a null map tile");
-        }
 
-        GlobalPosition = MapUtils.LatLonToCartesianNormalized(MapTile.Latitude, MapTile.Longitude, MapTile.MapTileType);
-
-        // Semi major & semi minor axis respectively
-        var axisLengths = MapUtils.GetPlanetSemiMajorAxis(MapTile.MapTileType);
-
-        Transform = Transform.Scaled(
-                new Vector3(
-                    (float)axisLengths.Item1,
-                    // We scale 'y' by the semi major axis, since the underlying normalized mesh has its semi-minor
-                    // axis represented as a fraction of the semi-major axis. To get back the true value then,
-                    // we multiply by the semi-major axis. The other axes are given values of '1' for the semi-major axis,
-                    // so again, we multiply by the same to get the true value on the Planets scale.
-                    (float)axisLengths.Item1,
-                    (float)axisLengths.Item1
-                ));
     }
 
 }

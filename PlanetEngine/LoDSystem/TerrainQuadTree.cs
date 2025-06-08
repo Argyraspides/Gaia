@@ -16,20 +16,17 @@
 
 */
 
-using System.Data;
-using System.Threading;
-
-namespace Hermes.Common.Planet.LoDSystem;
-
-using Godot;
 using System;
-using Hermes.Common.Map.Types;
-using Hermes.Common.Map.Utils;
-using HermesUtils;
-using Hermes.Common.Meshes.MeshGenerators;
-using Hermes.Core.SolarSystem;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
+using System.Threading;
+using Gaia.Common.Utils.Godot;
+using Gaia.PlanetEngine.MapTiles;
+using Gaia.PlanetEngine.MeshGenerators;
+using Godot;
+
+namespace Gaia.PlanetEngine.LoDSystem;
 
 /// <summary>
 /// The TerrainQuadTree class is a custom quadtree implementation meant for any generic LoD requirement, and
@@ -286,8 +283,8 @@ public sealed partial class TerrainQuadTree : Node3D
     private void InitializeTerrainNodeMesh(TerrainQuadTreeNode node)
     {
         bool invalidNode =
-            !HermesUtils.IsValid(node) ||
-            !HermesUtils.IsValid(node.Chunk) ||
+            !GodotUtils.IsValid(node) ||
+            !GodotUtils.IsValid(node.Chunk) ||
             node.Chunk.MapTile == null;
         if (invalidNode)
         {
@@ -296,7 +293,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
         // If the mesh is invalid this means this is the very first time we are loading up this node into the
         // scene tree
-        if (!HermesUtils.IsValid(node.Chunk.MeshInstance))
+        if (!GodotUtils.IsValid(node.Chunk.MeshInstance))
         {
             ArrayMesh meshSegment = GenerateMeshForNode(node);
             meshSegment.SetName("TerrainChunkMeshSegment");
@@ -360,7 +357,7 @@ public sealed partial class TerrainQuadTree : Node3D
         while (InvisibilityQueueNodes.TryDequeue(out TerrainQuadTreeNode node) &&
                dequeuesProcessed++ < MaxQueueUpdatesPerFrame)
         {
-            if (!HermesUtils.IsValid(node)) continue;
+            if (!GodotUtils.IsValid(node)) continue;
             node.Chunk.Visible = false;
         }
     }
@@ -371,7 +368,7 @@ public sealed partial class TerrainQuadTree : Node3D
         while (VisibilityQueueNodes.TryDequeue(out TerrainQuadTreeNode node) &&
                dequeuesProcessed++ < MaxQueueUpdatesPerFrame)
         {
-            if (!HermesUtils.IsValid(node)) continue;
+            if (!GodotUtils.IsValid(node)) continue;
             node.Chunk.Visible = true;
         }
     }
@@ -385,7 +382,7 @@ public sealed partial class TerrainQuadTree : Node3D
     /// <exception cref="ArgumentNullException">Thrown if the TerrainQuadTreeNode is not valid</exception>
     private void SplitNode(TerrainQuadTreeNode node)
     {
-        if (!HermesUtils.IsValid(node))
+        if (!GodotUtils.IsValid(node))
         {
             return;
         }
@@ -412,7 +409,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private void MergeNodeChildren(TerrainQuadTreeNode parent)
     {
-        if (!HermesUtils.IsValid(parent))
+        if (!GodotUtils.IsValid(parent))
         {
             return;
         }
@@ -423,7 +420,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
         foreach (var childNode in parent.ChildNodes)
         {
-            if (HermesUtils.IsValid(childNode))
+            if (GodotUtils.IsValid(childNode))
             {
                 childNode.Chunk.Visible = false;
                 childNode.IsDeepest = false;
@@ -438,23 +435,8 @@ public sealed partial class TerrainQuadTree : Node3D
 
         switch (TileType)
         {
-            case MapTileType.WEB_MERCATOR_WGS84:
-                meshSegment = WGS84EllipsoidMeshGenerator
-                    .CreateEllipsoidMeshSegment(
-                        (float)node.Chunk.MapTile.Latitude,
-                        (float)node.Chunk.MapTile.Longitude,
-                        (float)node.Chunk.MapTile.LatitudeRange,
-                        (float)node.Chunk.MapTile.LongitudeRange
-                    );
-                break;
-
             case MapTileType.WEB_MERCATOR_EARTH:
-                meshSegment = WebMercatorMeshGenerator.CreateMeshSegment(
-                    (float)node.Chunk.MapTile.Latitude,
-                    (float)node.Chunk.MapTile.Longitude,
-                    (float)node.Chunk.MapTile.LatitudeRange,
-                    (float)node.Chunk.MapTile.LongitudeRange
-                );
+                meshSegment = MeshGenerator.GenerateWebMercatorMesh();
                 break;
 
             default:
@@ -462,7 +444,7 @@ public sealed partial class TerrainQuadTree : Node3D
                 break;
         }
 
-        if (!HermesUtils.IsValid(meshSegment))
+        if (!GodotUtils.IsValid(meshSegment))
         {
             throw new NoNullAllowedException("The terrain quad tree must have a valid map tile type!");
         }
@@ -478,12 +460,12 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private void GenerateChildNodes(TerrainQuadTreeNode parentNode)
     {
-        if (!HermesUtils.IsValid(parentNode))
+        if (!GodotUtils.IsValid(parentNode))
         {
             throw new ArgumentNullException(nameof(parentNode), "Cannot generate children for a null node.");
         }
 
-        if (!HermesUtils.IsValid(parentNode.Chunk))
+        if (!GodotUtils.IsValid(parentNode.Chunk))
         {
             throw new ArgumentNullException(nameof(parentNode),
                 "Cannot generate children for a node with a null terrain chunk.");
@@ -522,7 +504,7 @@ public sealed partial class TerrainQuadTree : Node3D
         double childCenterLon = MapUtils.ComputeCenterLongitude(lonTileCoo, zoomLevel);
 
         var childChunk =
-            new TerrainChunk(new MapTile((float)childCenterLat, (float)childCenterLon, zoomLevel, TileType));
+            new Gaia.PlanetEngine.LoDSystem.TerrainChunk(new MapTile((float)childCenterLat, (float)childCenterLon, zoomLevel, TileType));
         childChunk.SetName("TerrainChunk");
         var terrainQuadTreeNode = new TerrainQuadTreeNode(childChunk, zoomLevel);
         terrainQuadTreeNode.SetName("TerrainQuadTreeNode");

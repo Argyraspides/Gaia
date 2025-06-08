@@ -17,9 +17,9 @@
 
 */
 
-using Hermes.Common.Networking.HTTP;
+using Gaia.Common.Utils.Networking.HTTP;
 
-namespace Hermes.Common.Map.Querying.Bing;
+namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
 
 /// <summary>
 /// Builds a URL for querying map tiles from the Bing backend API. This is the single source of truth for
