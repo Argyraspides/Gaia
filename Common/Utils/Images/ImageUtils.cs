@@ -19,10 +19,10 @@
 
 
 using System;
+using Gaia.Common.Enums;
 using Godot;
-using Hermes.Common.Types;
 
-namespace Hermes.Common.Map.Utils;
+namespace Gaia.Common.Utils.Images;
 
 public static class ImageUtils
 {

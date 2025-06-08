@@ -17,14 +17,10 @@
 
 */
 
-using Hermes.Common.Map.Caching.Bing;
-using Hermes.Common.Map.Querying.Bing;
-using Hermes.Common.Map.Types;
-
-namespace Hermes.Common.Map.Provider.Bing;
-
 using System.Threading.Tasks;
-using Hermes.Common.Map.Types.Bing;
+using Gaia.PlanetEngine.MapTiles;
+
+namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
 
 public class BingMapProvider : IMapProvider<BingMapTileQueryParameters>
 {
@@ -47,7 +43,7 @@ public class BingMapProvider : IMapProvider<BingMapTileQueryParameters>
         BingMercatorMapTile partialTile = new BingMercatorMapTile(
             queryParameters.QuadKey,
             queryParameters.MapType,
-            queryParameters.HumanLanguage,
+            queryParameters.Language,
             queryParameters.MapImageType,
             null
         );
@@ -68,7 +64,7 @@ public class BingMapProvider : IMapProvider<BingMapTileQueryParameters>
         BingMercatorMapTile bingMercatorMapTile = new BingMercatorMapTile(
             queryParameters.QuadKey,
             queryParameters.MapType,
-            queryParameters.HumanLanguage,
+            queryParameters.Language,
             queryParameters.MapImageType,
             rawMapData
         );

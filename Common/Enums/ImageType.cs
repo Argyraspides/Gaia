@@ -1,4 +1,4 @@
-namespace Gaia.Common;
+namespace Gaia.Common.Enums;
 
 public enum ImageType
 {

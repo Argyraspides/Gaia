@@ -1,32 +1,15 @@
-/*
+using Gaia.Common;
+using Gaia.Common.Enums;
+using Gaia.PlanetEngine.Utils;
+using Gaia.Common.Utils.Caching;
 
 
-
-
-88        88  88888888888  88888888ba   88b           d88  88888888888  ad88888ba
-88        88  88           88      "8b  888b         d888  88          d8"     "8b
-88        88  88           88      ,8P  88`8b       d8'88  88          Y8,
-88aaaaaaaa88  88aaaaa      88aaaaaa8P'  88 `8b     d8' 88  88aaaaa     `Y8aaaaa,
-88""""""""88  88"""""      88""""88'    88  `8b   d8'  88  88"""""       `"""""8b,
-88        88  88           88    `8b    88   `8b d8'   88  88                  `8b
-88        88  88           88     `8b   88    `888'    88  88          Y8a     a8P
-88        88  88888888888  88      `8b  88     `8'     88  88888888888  "Y88888P"
-
-
-                            MESSENGER OF THE MACHINES
-
-*/
-
-using Hermes.Common.Map.Utils;
-using Hermes.Common.Networking.Cache;
-using Hermes.Common.Types;
-
-namespace Hermes.Common.Map.Types;
 
 using Godot;
 using System;
 
-public class MapTile : HermesResource
+namespace Gaia.PlanetEngine.MapTiles;
+public class MapTile : GaiaResource
 {
     // Tile dimensions
     public int Width { get; protected set; } = 256;
@@ -62,11 +45,11 @@ public class MapTile : HermesResource
         ZoomLevel = 12;
 
         // Automatically determine tile coordinate, latitude/longitude range
-        LatitudeTileCoo = MapUtils.LatitudeToTileCoordinateMercator(Latitude, ZoomLevel);
-        LongitudeTileCoo = MapUtils.LongitudeToTileCoordinateMercator(Longitude, ZoomLevel);
+        LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(Latitude, ZoomLevel);
+        LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(Longitude, ZoomLevel);
 
-        LatitudeRange = MapUtils.TileToLatRange(LatitudeTileCoo, ZoomLevel);
-        LongitudeRange = MapUtils.TileToLonRange(ZoomLevel);
+        LatitudeRange = PlanetUtils.TileToLatRange(LatitudeTileCoo, ZoomLevel);
+        LongitudeRange = PlanetUtils.TileToLonRange(ZoomLevel);
 
         AutoDetermineFields(Latitude, Longitude, ZoomLevel);
     }
@@ -83,10 +66,10 @@ public class MapTile : HermesResource
     private void AutoDetermineFields(double latitude, double longitude, int zoomLevel)
     {
         // Automatically determine tile coordinate, latitude/longitude range
-        LatitudeTileCoo = MapUtils.LatitudeToTileCoordinateMercator(latitude, zoomLevel);
-        LongitudeTileCoo = MapUtils.LongitudeToTileCoordinateMercator(longitude, zoomLevel);
-        LatitudeRange = MapUtils.TileToLatRange(LatitudeTileCoo, zoomLevel);
-        LongitudeRange = MapUtils.TileToLonRange(zoomLevel);
+        LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(latitude, zoomLevel);
+        LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(longitude, zoomLevel);
+        LatitudeRange = PlanetUtils.TileToLatRange(LatitudeTileCoo, zoomLevel);
+        LongitudeRange = PlanetUtils.TileToLonRange(zoomLevel);
     }
 
     public override bool IsHashable()

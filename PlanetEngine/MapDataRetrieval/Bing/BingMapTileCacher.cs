@@ -17,14 +17,14 @@
 
 */
 
-using Hermes.Common.Networking.Cache;
-
-namespace Hermes.Common.Map.Caching.Bing;
 
 using System;
 using System.IO;
+using Gaia.Common.Utils.Caching;
 using Godot;
-using Hermes.Common.Map.Types.Bing;
+
+namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
+
 using FileAccess = Godot.FileAccess;
 
 public class BingMapTileCacher : ICacheCapability<BingMercatorMapTile>

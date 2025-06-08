@@ -17,12 +17,13 @@
 
 */
 
-using Hermes.Common.Map.Types;
-using Hermes.Common.Networking.HTTP;
-
-namespace Hermes.Common.Map.Provider;
 
 using System.Threading.Tasks;
+
+using Gaia.Common.Utils.Networking.HTTP;
+using Gaia.PlanetEngine.MapTiles;
+
+namespace Gaia.PlanetEngine.MapDataRetrieval;
 
 public interface IMapProvider<TQueryParameters> where TQueryParameters : IQueryParameters
 {

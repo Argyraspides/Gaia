@@ -17,13 +17,13 @@
 
 */
 
-using Hermes.Common.Map.Types;
-using Hermes.Common.Networking.HTTP;
-using Hermes.Common.Types;
-
-namespace Hermes.Common.Map.Querying.Bing;
-
 using System.Collections.Generic;
+using Gaia.Common;
+using Gaia.Common.Enums;
+using Gaia.Common.Utils.Networking.HTTP;
+using Gaia.PlanetEngine.MapTiles;
+
+namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
 
 public class BingMapTileQueryParameters : IQueryParameters
 {
@@ -37,7 +37,7 @@ public class BingMapTileQueryParameters : IQueryParameters
         string quadKey,
         ImageType mapImgType,
         string apiVersion,
-        Common.Types.HumanLanguage humanLanguage
+        HumanLanguage language
     )
     {
         if (serverInstance < 0 || serverInstance >= 4)
@@ -63,7 +63,7 @@ public class BingMapTileQueryParameters : IQueryParameters
         QuadKey = quadKey;
         MapImageType = mapImgType;
         APIVersion = apiVersion;
-        HumanLanguage = humanLanguage;
+        Language = language;
     }
 
     /*
@@ -72,12 +72,13 @@ public class BingMapTileQueryParameters : IQueryParameters
     "https://ecn.t{serverInstance}.tiles.virtualearth.net/tiles/{mapType}{quadKey}.{mapImgType}?g={apiVersion}&mkt={lang}";
 
     */
+    
     public int ServerInstance { get; private set; }
     public MapType MapType { get; private set; }
     public string QuadKey { get; private set; }
     public ImageType MapImageType { get; private set; }
     public string APIVersion { get; private set; }
-    public Common.Types.HumanLanguage HumanLanguage { get; private set; }
+    public HumanLanguage Language { get; private set; }
 
     public IDictionary<string, string> ToQueryDictionary()
     {
@@ -88,7 +89,7 @@ public class BingMapTileQueryParameters : IQueryParameters
         queryParams[BingMapTileURLBuilder.quadKeyStr] = QuadKey;
         queryParams[BingMapTileURLBuilder.mapImgTypeStr] = MapImageType.ToString();
         queryParams[BingMapTileURLBuilder.apiVersionStr] = APIVersion;
-        queryParams[BingMapTileURLBuilder.langStr] = HumanLanguage.ToString().ToLower();
+        queryParams[BingMapTileURLBuilder.langStr] = Language.ToString().ToLower();
 
         return queryParams;
     }

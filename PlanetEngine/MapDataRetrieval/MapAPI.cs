@@ -17,33 +17,28 @@
 
 */
 
+
 using System;
-using Hermes.Common.Map.Types;
-using Hermes.Common.Map.Utils;
-using Hermes.Common.Types;
-
-namespace Hermes.Common.Map.Querying;
-
-using Godot;
 using System.Threading.Tasks;
-using Hermes.Common.Map.Provider.Bing;
-using Hermes.Common.Map.Querying.Bing;
+using Gaia.Common;
+using Gaia.Common.Enums;
+using Gaia.PlanetEngine.MapDataRetrieval.Bing;
+using Gaia.PlanetEngine.MapTiles;
+using Gaia.PlanetEngine.Utils;
 
-public class MapAPI
+namespace Gaia.PlanetEngine.MapDataRetrieval;
+
+public static class MapAPI
 {
 
     private const string DEFAULT_API_VERSION_BING = "523";
-    private BingMapProvider m_mapProvider;
+    private static BingMapProvider m_bingMapProvider = new BingMapProvider();
 
-    public MapAPI()
-    {
-        m_mapProvider = new BingMapProvider();
-    }
 
     // Requests a map tile at a particular latitude/longitude at a specified zoom level (degrees), with a map type
     // (e.g., satellite, street, hybrid, etc.), and an image type (PNG, JPG, etc.).
     // To understand map tiling, see: https://www.microimages.com/documentation/TechGuides/78BingStructure.pdf
-    public async Task<MapTile> RequestMapTileAsync(
+    public static async Task<MapTile> RequestMapTileAsync(
         float latitude,
         float longitude,
         int zoom,
@@ -69,7 +64,7 @@ public class MapAPI
     }
 
 
-    public async Task<MapTile> RequestBingWebMercatorMapTile(
+    public static async Task<MapTile> RequestBingWebMercatorMapTile(
         float latitude,
         float longitude,
         int zoom,
@@ -88,13 +83,13 @@ public class MapAPI
         BingMapTileQueryParameters bingQueryParameters = new BingMapTileQueryParameters(
             serverInstance,
             mapType,
-            MapUtils.LatLonAndZoomToQuadKey(latitude, longitude, zoom),
+            PlanetUtils.LatLonAndZoomToQuadKey(latitude, longitude, zoom),
             mapImageType,
             DEFAULT_API_VERSION_BING,
             HumanLanguage.en
         );
 
-        return await m_mapProvider.RequestMapTileAsync(bingQueryParameters);
+        return await m_bingMapProvider.RequestMapTileAsync(bingQueryParameters);
     }
 
 }

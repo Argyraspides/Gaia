@@ -2,7 +2,7 @@ using System;
 
 namespace Gaia.Common.Utils.Logging;
 
-public static partial class Logging
+public static partial class Logger
 {
     
     private static bool m_infoLoggingEnabled = true;
