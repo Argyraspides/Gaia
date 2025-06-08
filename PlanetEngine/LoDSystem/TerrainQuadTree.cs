@@ -24,6 +24,7 @@ using System.Threading;
 using Gaia.Common.Utils.Godot;
 using Gaia.PlanetEngine.MapTiles;
 using Gaia.PlanetEngine.MeshGenerators;
+using Gaia.PlanetEngine.Utils;
 using Godot;
 
 namespace Gaia.PlanetEngine.LoDSystem;
@@ -80,13 +81,6 @@ public sealed partial class TerrainQuadTree : Node3D
     public ConcurrentQueue<TerrainQuadTreeNode> SplitQueueNodes = new ConcurrentQueue<TerrainQuadTreeNode>();
     public ConcurrentQueue<TerrainQuadTreeNode> MergeQueueNodes = new ConcurrentQueue<TerrainQuadTreeNode>();
 
-    // Queue of nodes that should be turned visible/invisible. To hide gaps between meshes of different zoom levels,
-    // the current solution is to keep the parent of the deepest node visible. When splitting, visibility of parents is kept on.
-    // As we split further, the visibility of the parent of a node that is just about to be split should be turned off. As we
-    // merge back in, since the parent of the node we are about to merge into was previously turned off, we will turn it back on
-    public ConcurrentQueue<TerrainQuadTreeNode> InvisibilityQueueNodes = new ConcurrentQueue<TerrainQuadTreeNode>();
-    public ConcurrentQueue<TerrainQuadTreeNode> VisibilityQueueNodes = new ConcurrentQueue<TerrainQuadTreeNode>();
-
     // If we hit x% of the maximum allowed amount of nodes, we will begin culling unused nodes in the quadtree
     public float MaxNodesCleanupThresholdPercent { get; private set; } = 0.90F;
 
@@ -104,10 +98,6 @@ public sealed partial class TerrainQuadTree : Node3D
     // Hard limit of minimum allowed depth of the quadtree
     private const int MIN_DEPTH_LIMIT = 1;
 
-    // To prevent seams, we keep only the parent chunk of the current deepest visible.
-    // This is the offset used to determine the draw order (children should be drawn after parents)
-    private const float CHUNK_SORT_OFFSET = 10.0f;
-
     // TODO(Argyrsapides, 22/02/2025) { Make this a configurable curve or something based on planet type. Should probably
     // reside in MapUtils }
     private readonly double[] m_baseAltitudeThresholds = new double[]
@@ -116,7 +106,7 @@ public sealed partial class TerrainQuadTree : Node3D
         76.17f, 38.08f, 19.04f, 9.52f, 4.76f, 2.38f, 1.2f, 0.6f, 0.35f
     };
 
-    private readonly Core.SolarSystem.PlanetOrbitalCamera m_camera;
+    private readonly Camera3D m_camera;
     private TerrainQuadTreeTraverser m_QuadTreeTraverser;
 
     // True if the TerrainQuadTree is about to be destroyed. Used as we don't want to update our current node count
@@ -125,8 +115,8 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private MapTileType TileType;
 
-    public TerrainQuadTree(Core.SolarSystem.PlanetOrbitalCamera camera, MapTileType tileType, int maxNodes = 7500,
-        int minDepth = 6, int maxDepth = 20)
+    public TerrainQuadTree(Camera3D camera, MapTileType tileType, int maxNodes = 1000,
+        int minDepth = 4, int maxDepth = 20)
     {
         if (maxDepth > MAX_DEPTH_LIMIT || maxDepth < MIN_DEPTH_LIMIT)
         {
@@ -167,29 +157,9 @@ public sealed partial class TerrainQuadTree : Node3D
     {
         CameraPosition = m_camera.Position;
 
-        for (int i = m_baseAltitudeThresholds.Length - 1; i > 1; i--)
-        {
-            if (m_baseAltitudeThresholds[i] < m_camera.CurrentAltitude &&
-                m_baseAltitudeThresholds[i - 1] > m_camera.CurrentAltitude)
-            {
-                m_camera.CurrentZoomLevel = i;
-                break;
-            }
-        }
-
         if (m_canUpdateQuadTree.IsSet)
         {
-            // If we make the parent nodes of the nodes we are about to split invisible before we actually split them, then
-            // we will momentarily see the gaps between meshes of different zoom levels.
-            // So, first we split, keeping the visibility of both children and parent on,
-            // THEN we turn the visibility of the parent of the node that was just split off.
             ProcessSplitQueue();
-            ProcessInvisibilityQueue();
-
-            // Similar logic here for order. Previously, the visibility of the parent of the node we just split was turned off.
-            // Now, we are merging the children back into the parent. So, we toggle the visibility of the parent of the node
-            // we are merging into back on before we merge to avoid seeing the gaps momentarily.
-            ProcessVisibilityQueue();
             ProcessMergeQueue();
         }
 
@@ -231,8 +201,6 @@ public sealed partial class TerrainQuadTree : Node3D
         {
             throw new ArgumentException($"zoomLevel must be between {MinDepth} and {MaxDepth}");
         }
-
-        m_camera.CurrentZoomLevel = zoomLevel;
 
         Queue<TerrainQuadTreeNode> nodeQueue = new Queue<TerrainQuadTreeNode>();
         RootNodes = new List<TerrainQuadTreeNode>();
@@ -351,29 +319,6 @@ public sealed partial class TerrainQuadTree : Node3D
         }
     }
 
-    private void ProcessInvisibilityQueue()
-    {
-        int dequeuesProcessed = 0;
-        while (InvisibilityQueueNodes.TryDequeue(out TerrainQuadTreeNode node) &&
-               dequeuesProcessed++ < MaxQueueUpdatesPerFrame)
-        {
-            if (!GodotUtils.IsValid(node)) continue;
-            node.Chunk.Visible = false;
-        }
-    }
-
-    private void ProcessVisibilityQueue()
-    {
-        int dequeuesProcessed = 0;
-        while (VisibilityQueueNodes.TryDequeue(out TerrainQuadTreeNode node) &&
-               dequeuesProcessed++ < MaxQueueUpdatesPerFrame)
-        {
-            if (!GodotUtils.IsValid(node)) continue;
-            node.Chunk.Visible = true;
-        }
-    }
-
-
     /// <summary>
     /// Splits the quad tree nodes by initializing its children. If its children already exists, simply
     /// toggles their visibility on and itself off.
@@ -400,10 +345,8 @@ public sealed partial class TerrainQuadTree : Node3D
         {
             childNode.IsDeepest = true;
             childNode.Chunk.Visible = true;
-            childNode.Chunk.TerrainChunkMesh.SortingOffset = CHUNK_SORT_OFFSET * childNode.Depth;
         }
 
-        node.Chunk.TerrainChunkMesh.SortingOffset = -CHUNK_SORT_OFFSET * node.Depth;
         node.IsDeepest = false;
     }
 
@@ -414,7 +357,6 @@ public sealed partial class TerrainQuadTree : Node3D
             return;
         }
 
-        parent.Chunk.TerrainChunkMesh.SortingOffset = CHUNK_SORT_OFFSET * parent.Depth;
         parent.Chunk.Visible = true;
         parent.IsDeepest = true;
 
@@ -424,7 +366,6 @@ public sealed partial class TerrainQuadTree : Node3D
             {
                 childNode.Chunk.Visible = false;
                 childNode.IsDeepest = false;
-                childNode.Chunk.TerrainChunkMesh.SortingOffset = -CHUNK_SORT_OFFSET * childNode.Depth;
             }
         }
     }
@@ -500,11 +441,16 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private TerrainQuadTreeNode CreateNode(int latTileCoo, int lonTileCoo, int zoomLevel)
     {
-        double childCenterLat = MapUtils.ComputeCenterLatitude(latTileCoo, zoomLevel);
-        double childCenterLon = MapUtils.ComputeCenterLongitude(lonTileCoo, zoomLevel);
+        double childCenterLat = PlanetUtils.ComputeCenterLatitude(latTileCoo, zoomLevel);
+        double childCenterLon = PlanetUtils.ComputeCenterLongitude(lonTileCoo, zoomLevel);
 
         var childChunk =
-            new Gaia.PlanetEngine.LoDSystem.TerrainChunk(new MapTile((float)childCenterLat, (float)childCenterLon, zoomLevel, TileType));
+            new TerrainChunk(new MapTile(
+                        (float)childCenterLat,
+                        (float)childCenterLon,
+                        zoomLevel,
+                        TileType)
+            );
         childChunk.SetName("TerrainChunk");
         var terrainQuadTreeNode = new TerrainQuadTreeNode(childChunk, zoomLevel);
         terrainQuadTreeNode.SetName("TerrainQuadTreeNode");

@@ -19,7 +19,34 @@
 
 using Godot;
 using System;
+using Gaia.Common.Utils.Godot;
+using Gaia.Common.Utils.Logging;
+using Gaia.PlanetEngine.MapTiles;
 
 public partial class SolarSystem : WorldEnvironment
 {
+    private Camera3D m_camera;
+    private Earth m_earth;
+
+    public override void _Ready()
+    {
+        base._Ready();
+        m_camera = GetNode<Camera3D>("MainCamera");
+        
+        LoadEarth();
+    }
+
+    private void LoadEarth()
+    {
+        if (!GodotUtils.IsValid(m_camera))
+        {
+            Logger.LogError("SolarSystem::LoadEarth(): m_camera not found!");
+            return;
+        }
+        
+        PackedScene sceneResource = GD.Load<PackedScene>("res://SolarSystem/Scenes/Earth/Earth.tscn");
+        m_earth = sceneResource.Instantiate<Earth>();
+
+        m_earth.Construct(m_camera, MapTileType.WEB_MERCATOR_EARTH);
+    }
 }

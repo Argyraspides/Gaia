@@ -2,13 +2,11 @@ using Gaia.Common;
 using Gaia.Common.Enums;
 using Gaia.PlanetEngine.Utils;
 using Gaia.Common.Utils.Caching;
-
-
-
 using Godot;
 using System;
 
 namespace Gaia.PlanetEngine.MapTiles;
+
 public class MapTile : GaiaResource
 {
     // Tile dimensions

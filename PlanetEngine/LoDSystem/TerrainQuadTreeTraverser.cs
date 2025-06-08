@@ -162,7 +162,6 @@ public partial class TerrainQuadTreeTraverser
         if (node.IsDeepest && ShouldSplit(node))
         {
             m_terrainQuadTree.SplitQueueNodes.Enqueue(node);
-            if (parent != null) m_terrainQuadTree.InvisibilityQueueNodes.Enqueue(parent);
             return;
         }
 
@@ -175,7 +174,6 @@ public partial class TerrainQuadTreeTraverser
         if (ShouldMergeChildren(node))
         {
             m_terrainQuadTree.MergeQueueNodes.Enqueue(node);
-            if (parent != null) m_terrainQuadTree.VisibilityQueueNodes.Enqueue(parent);
         }
     }
 

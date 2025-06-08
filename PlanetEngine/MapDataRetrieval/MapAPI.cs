@@ -20,7 +20,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Gaia.Common;
 using Gaia.Common.Enums;
 using Gaia.PlanetEngine.MapDataRetrieval.Bing;
 using Gaia.PlanetEngine.MapTiles;
@@ -30,7 +29,6 @@ namespace Gaia.PlanetEngine.MapDataRetrieval;
 
 public static class MapAPI
 {
-
     private const string DEFAULT_API_VERSION_BING = "523";
     private static BingMapProvider m_bingMapProvider = new BingMapProvider();
 
@@ -71,7 +69,6 @@ public static class MapAPI
         MapType mapType,
         ImageType mapImageType)
     {
-
         // Bings API has a load balancer so we choose a random server here to prevent overloading any
         // individual one
         int serverInstance =
@@ -91,5 +88,4 @@ public static class MapAPI
 
         return await m_bingMapProvider.RequestMapTileAsync(bingQueryParameters);
     }
-
 }

@@ -27,7 +27,6 @@ namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
 
 public class BingMapTileQueryParameters : IQueryParameters
 {
-
     public const int MINIMUM_SERVER_INSTANCE = 0;
     public const int MAXIMUM_SERVER_INSTANCE = 3;
 
@@ -72,7 +71,7 @@ public class BingMapTileQueryParameters : IQueryParameters
     "https://ecn.t{serverInstance}.tiles.virtualearth.net/tiles/{mapType}{quadKey}.{mapImgType}?g={apiVersion}&mkt={lang}";
 
     */
-    
+
     public int ServerInstance { get; private set; }
     public MapType MapType { get; private set; }
     public string QuadKey { get; private set; }

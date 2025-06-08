@@ -552,7 +552,7 @@ public static partial class PlanetUtils
                 return (BLANK_PLANET_SEMI_MAJOR_AXIS_LEN_KM, BLANK_PLANET_SEMI_MINOR_AXIS_LEN_KM);
         }
     }
-    
+
     /// <summary>
     /// Given a radius and the circumference of a sphere, returns the radians of latitude and longitude
     /// that the radius mapped onto the surface corresponds to. Assumes the radius is mapped parallel to the

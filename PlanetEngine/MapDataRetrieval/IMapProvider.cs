@@ -19,7 +19,6 @@
 
 
 using System.Threading.Tasks;
-
 using Gaia.Common.Utils.Networking.HTTP;
 using Gaia.PlanetEngine.MapTiles;
 

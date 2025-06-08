@@ -61,21 +61,8 @@ public partial class TerrainChunk : Node3D
         get => TerrainChunkMesh;
         set => TerrainChunkMesh = value;
     }
-
-    /// <summary>
-    /// Initializes a new instance of the TerrainChunk class.
-    /// </summary>
-    /// <param name="lat">Center latitude in radians.</param>
-    /// <param name="lon">Center longitude in radians.</param>
-    /// <param name="latRange">Latitude range covered in radians.</param>
-    /// <param name="lonRange">Longitude range covered in radians.</param>
-    /// <param name="zoomLevel">Map zoom level.</param>
-    /// <param name="terrainChunkMesh">3D mesh instance for the terrain.</param>
-    /// <param name="texture2D">Texture to be applied to the terrain.</param>
-    public TerrainChunk(
-        MapTile mapTile,
-        MeshInstance3D terrainChunkMesh = null,
-        ShaderMaterial shaderMaterial = null)
+    
+    public TerrainChunk(MapTile mapTile)
     {
         if (mapTile == null)
         {
@@ -93,8 +80,6 @@ public partial class TerrainChunk : Node3D
             throw new Exception("Cannot create a TerrainChunk as the map tile type is unknown");
         }
 
-        TerrainChunkMesh = terrainChunkMesh;
-        ShaderMaterial = shaderMaterial;
     }
 
     public async void Load()
@@ -181,7 +166,5 @@ public partial class TerrainChunk : Node3D
 
     public void SetPositionAndSize()
     {
-
     }
-
 }
