@@ -164,7 +164,4 @@ public partial class TerrainChunk : Node3D
         ApplyTexture(mapTile.Texture2D);
     }
 
-    public void SetPositionAndSize()
-    {
-    }
 }

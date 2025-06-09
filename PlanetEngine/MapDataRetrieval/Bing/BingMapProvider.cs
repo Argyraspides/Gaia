@@ -66,10 +66,10 @@ public class BingMapProvider : IMapProvider<BingMapTileQueryParameters>
             queryParameters.MapType,
             queryParameters.Language,
             queryParameters.MapImageType,
-            rawMapData
+            null // TODO:: ADD BACK!!//rawMapData
         );
 
-        m_bingMapTileCacher.CacheResource(bingMercatorMapTile);
+        // m_bingMapTileCacher.CacheResource(bingMercatorMapTile);
 
         return bingMercatorMapTile;
     }

@@ -22,6 +22,7 @@ using Gaia.Common.Enums;
 using Gaia.Common.Utils.Images;
 using Gaia.PlanetEngine.MapTiles;
 using Gaia.PlanetEngine.Utils;
+using Godot;
 
 namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
 
@@ -67,6 +68,12 @@ public class BingMercatorMapTile : MapTile
         {
             (Width, Height) = ImageUtils.GetImageDimensions(imageData);
             Texture2D = ImageUtils.ByteArrayToImageTexture(imageData);
+        }
+        else
+        {
+            var placeHolderTexture = new PlaceholderTexture2D();
+            placeHolderTexture.Size = new Vector2I(256, 256);
+            Texture2D = placeHolderTexture;
         }
 
         ResourceData = imageData;

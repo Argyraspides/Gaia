@@ -202,7 +202,6 @@ public sealed partial class TerrainQuadTree : Node3D
             throw new ArgumentException($"zoomLevel must be between {MinDepth} and {MaxDepth}");
         }
 
-        Queue<TerrainQuadTreeNode> nodeQueue = new Queue<TerrainQuadTreeNode>();
         RootNodes = new List<TerrainQuadTreeNode>();
 
         int nodesPerSide = (1 << zoomLevel); // 2^z
@@ -211,32 +210,15 @@ public sealed partial class TerrainQuadTree : Node3D
         {
             int latTileCoo = i / nodesPerSide;
             int lonTileCoo = i % nodesPerSide;
+            
             TerrainQuadTreeNode n = CreateNode(latTileCoo, lonTileCoo, MinDepth);
+            
+            n.IsDeepest = true;
             n.Name = $"TerrainQuadTreeNode_{latTileCoo}_{lonTileCoo}";
+
             RootNodes.Add(n);
-            nodeQueue.Enqueue(RootNodes[i]);
-        }
-
-        for (int zLevel = zoomLevel; zLevel < zoomLevel; zLevel++)
-        {
-            nodesInLevel = 1 << (2 * zLevel); // 4^z
-            for (int n = 0; n < nodesInLevel; n++)
-            {
-                TerrainQuadTreeNode parentNode = nodeQueue.Dequeue();
-                GenerateChildNodes(parentNode);
-                foreach (var childNode in parentNode.ChildNodes)
-                {
-                    childNode.IsDeepest = true;
-                    nodeQueue.Enqueue(childNode);
-                }
-            }
-        }
-
-        while (nodeQueue.Count > 0)
-        {
-            TerrainQuadTreeNode node = nodeQueue.Dequeue();
-            AddChild(node);
-            InitializeTerrainNodeMesh(node);
+            InitializeTerrainNodeMesh(n);
+            AddChild(n);
         }
 
         m_QuadTreeTraverser.Start();
@@ -263,14 +245,10 @@ public sealed partial class TerrainQuadTree : Node3D
         // scene tree
         if (!GodotUtils.IsValid(node.Chunk.MeshInstance))
         {
-            ArrayMesh meshSegment = GenerateMeshForNode(node);
-            meshSegment.SetName("TerrainChunkMeshSegment");
-
-            var newChunkMesh = new MeshInstance3D { Mesh = meshSegment };
+            var newChunkMesh = GenerateMeshForNode(node);
             newChunkMesh.SetName("TerrainChunkMesh");
             node.Chunk.MeshInstance = newChunkMesh;
 
-            node.Chunk.SetPositionAndSize(); // Set the position of the chunk itself
             node.Position = node.Chunk.Position; // Set the position of the node (copy chunk position)
 
             node.Chunk.Name = GenerateChunkName(node);
@@ -370,14 +348,14 @@ public sealed partial class TerrainQuadTree : Node3D
         }
     }
 
-    private ArrayMesh GenerateMeshForNode(TerrainQuadTreeNode node)
+    private MeshInstance3D GenerateMeshForNode(TerrainQuadTreeNode node)
     {
-        ArrayMesh meshSegment;
+        MeshInstance3D meshSegment;
 
         switch (TileType)
         {
             case MapTileType.WEB_MERCATOR_EARTH:
-                meshSegment = MeshGenerator.GenerateWebMercatorMesh();
+                meshSegment = MeshGenerator.GenerateWebMercatorMesh(node.Chunk.MapTile.Height, node.Chunk.MapTile.Width);
                 break;
 
             default:
