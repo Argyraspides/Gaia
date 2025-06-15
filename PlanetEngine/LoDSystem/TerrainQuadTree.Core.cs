@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading;
 using Gaia.Common.Utils.Godot;
+using Gaia.Common.Utils.Logging;
 using Gaia.PlanetEngine.MapTiles;
 using Gaia.PlanetEngine.MeshGenerators;
 using Gaia.PlanetEngine.Utils;
@@ -29,25 +30,6 @@ using Godot;
 
 namespace Gaia.PlanetEngine.LoDSystem;
 
-/// <summary>
-/// The TerrainQuadTree class is a custom quadtree implementation meant for any generic LoD requirement, and
-/// is meant for use in 3D space.
-///
-/// It works by taking in a Camera3D instance, and based on the camera's FOV and distance from each
-/// TerrainChunk in the world, will determine whether chunks need to be split/merged. This is meant to be
-/// used within Planet objects, where the TerrainQuadTree will act as the central manager for the LoD system of
-/// the TerrainChunk's that represent the planet's surface.
-///
-/// TerrainQuadTree depends on the class TerrainQuadTreeUpdater, which performs a tree traversal on a separate thread
-/// in order to queue up TerrainQuadTreeNode's that should be split/merged. This TerrainQuadTreeUpdater also culls unused
-/// nodes on a different thread. Nodes that need to be split/merged are queued up in TerrainQuadTree and processed during
-/// the game loop over many frames to reduce in-game lag.
-///
-/// When the TerrainQuadTree is finished merging/splitting, it will signal to the TerrainQuadTreeUpdater that it has completed
-/// this work. The TerrainQuadTreeUpdater will then attempt to cull any unused nodes. When it is finished doing so, it will
-/// again traverse the quadtree to determine which nodes should be split/merged, signal to the TerrainQuadTree when it is finished,
-/// and the cycle repeats.
-/// </summary>
 public sealed partial class TerrainQuadTree : Node3D
 {
     // Current minimum and maximum depths allowed
@@ -107,16 +89,13 @@ public sealed partial class TerrainQuadTree : Node3D
     };
 
     private readonly Camera3D m_camera;
-    private TerrainQuadTreeTraverser m_QuadTreeTraverser;
 
     // True if the TerrainQuadTree is about to be destroyed. Used as we don't want to update our current node count
     // when the game is closing and nodes in the scene tree may be invalid
     private bool m_destructorActivated = false;
 
-    private MapTileType TileType;
-
     public TerrainQuadTree(Camera3D camera, MapTileType tileType, int maxNodes = 1000,
-        int minDepth = 4, int maxDepth = 20)
+        int minDepth = 6, int maxDepth = 20)
     {
         if (maxDepth > MAX_DEPTH_LIMIT || maxDepth < MIN_DEPTH_LIMIT)
         {
@@ -142,15 +121,8 @@ public sealed partial class TerrainQuadTree : Node3D
         MaxNodes = maxNodes;
         MinDepth = minDepth;
         MaxDepth = maxDepth;
-        TileType = tileType;
-
 
         InitializeAltitudeThresholds();
-    }
-
-    public override void _Ready()
-    {
-        m_QuadTreeTraverser = new TerrainQuadTreeTraverser(this, m_canUpdateQuadTree);
     }
 
     public override void _Process(double delta)
@@ -166,28 +138,14 @@ public sealed partial class TerrainQuadTree : Node3D
         if (SplitQueueNodes.IsEmpty && MergeQueueNodes.IsEmpty)
         {
             m_canUpdateQuadTree.Reset();
-            m_QuadTreeTraverser.m_canPerformCulling.Set();
+            m_canPerformCulling.Set();
         }
     }
 
     public override void _ExitTree()
     {
         base._ExitTree();
-        m_QuadTreeTraverser.Stop();
-    }
-
-    public override void _Notification(int what)
-    {
-        if (what == NotificationPredelete)
-        {
-            m_destructorActivated = true;
-        }
-        // We don't want to attempt to GetTree().GetNodeCount() when the scene tree (or at the very least,
-        // the TerrainQuadTree) is about to be deleted.
-        else if (!m_destructorActivated && what == NotificationChildOrderChanged)
-        {
-            CurrentNodeCount = GetTree().GetNodeCount();
-        }
+        Stop();
     }
 
     /// <summary>
@@ -216,48 +174,38 @@ public sealed partial class TerrainQuadTree : Node3D
             n.IsDeepest = true;
             n.Name = $"TerrainQuadTreeNode_{latTileCoo}_{lonTileCoo}";
 
-            RootNodes.Add(n);
-            InitializeTerrainNodeMesh(n);
             AddChild(n);
+            RootNodes.Add(n);
+            InitializeTerrainNode(n);
         }
 
-        m_QuadTreeTraverser.Start();
+        // Start();
     }
 
-    /// <summary>
-    /// Initializes the mesh of a TerrainQuadTreeNode. Does nothing if the mesh is already initialized,
-    /// otherwise creates a new one for it based on the internal TerrainChunks properties.
-    /// </summary>
-    /// <param name="node">The node to initialize the mesh of (for its TerrainChunk)</param>
-    /// <exception cref="ArgumentNullException"></exception>
-    private void InitializeTerrainNodeMesh(TerrainQuadTreeNode node)
+    private void InitializeTerrainNode(TerrainQuadTreeNode node)
     {
-        bool invalidNode =
-            !GodotUtils.IsValid(node) ||
-            !GodotUtils.IsValid(node.Chunk) ||
-            node.Chunk.MapTile == null;
-        if (invalidNode)
+        if (!GodotUtils.IsValid(node))
         {
-            throw new ArgumentNullException("Cannot initialize terrain mesh because node is invalid");
+            Logger.LogError("TerrainQuadTree::InitializeTerrainNodeMesh: Invalid terrain node!");
+            return;
         }
-
-        // If the mesh is invalid this means this is the very first time we are loading up this node into the
-        // scene tree
-        if (!GodotUtils.IsValid(node.Chunk.MeshInstance))
-        {
-            var newChunkMesh = GenerateMeshForNode(node);
-            newChunkMesh.SetName("TerrainChunkMesh");
-            node.Chunk.MeshInstance = newChunkMesh;
-
-            node.Position = node.Chunk.Position; // Set the position of the node (copy chunk position)
-
-            node.Chunk.Name = GenerateChunkName(node);
-
-            node.Chunk.Load();
-        }
-
+        
         node.IsDeepest = true;
         node.Chunk.Visible = true;
+        
+        node.GlobalPosition = new Vector3(
+            node.Chunk.MapTile.LongitudeTileCoo,
+            0.0f,
+            node.Chunk.MapTile.LatitudeTileCoo
+        );
+
+        node.Chunk.MeshInstance = 
+            MeshGenerator.GenerateWebMercatorMesh(
+                // node.Chunk.MapTile.Width, 
+                // node.Chunk.MapTile.Height
+            );
+        
+        node.Chunk.Load();  
     }
 
     private void InitializeAltitudeThresholds()
@@ -315,7 +263,7 @@ public sealed partial class TerrainQuadTree : Node3D
             GenerateChildNodes(node);
             foreach (var childNode in node.ChildNodes)
             {
-                InitializeTerrainNodeMesh(childNode);
+                InitializeTerrainNode(childNode);
             }
         }
 
@@ -346,29 +294,6 @@ public sealed partial class TerrainQuadTree : Node3D
                 childNode.IsDeepest = false;
             }
         }
-    }
-
-    private MeshInstance3D GenerateMeshForNode(TerrainQuadTreeNode node)
-    {
-        MeshInstance3D meshSegment;
-
-        switch (TileType)
-        {
-            case MapTileType.WEB_MERCATOR_EARTH:
-                meshSegment = MeshGenerator.GenerateWebMercatorMesh(node.Chunk.MapTile.Height, node.Chunk.MapTile.Width);
-                break;
-
-            default:
-                meshSegment = null;
-                break;
-        }
-
-        if (!GodotUtils.IsValid(meshSegment))
-        {
-            throw new NoNullAllowedException("The terrain quad tree must have a valid map tile type!");
-        }
-
-        return meshSegment;
     }
 
     private string GenerateChunkName(TerrainQuadTreeNode node)
@@ -419,15 +344,15 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private TerrainQuadTreeNode CreateNode(int latTileCoo, int lonTileCoo, int zoomLevel)
     {
-        double childCenterLat = PlanetUtils.ComputeCenterLatitude(latTileCoo, zoomLevel);
-        double childCenterLon = PlanetUtils.ComputeCenterLongitude(lonTileCoo, zoomLevel);
+        double childCenterLat = PlanetUtils.ComputeCenterLatitudeWebMercator(latTileCoo, zoomLevel);
+        double childCenterLon = PlanetUtils.ComputeCenterLongitudeWebMercator(lonTileCoo, zoomLevel);
 
         var childChunk =
             new TerrainChunk(new MapTile(
                         (float)childCenterLat,
                         (float)childCenterLon,
                         zoomLevel,
-                        TileType)
+                        MapTileType.WEB_MERCATOR_EARTH)
             );
         childChunk.SetName("TerrainChunk");
         var terrainQuadTreeNode = new TerrainQuadTreeNode(childChunk, zoomLevel);

@@ -120,7 +120,7 @@ public static partial class PlanetUtils
     /// <param name="tx">Tile x-coordinate</param>
     /// <param name="zoom">Zoom level (determines the total number of tiles at this zoom)</param>
     /// <returns>Longitude of the tile's western edge, in radians.</returns>
-    public static double TileCoordinateToLongitude(int tx, int zoom)
+    public static double TileCoordinateToLongitudeWebMercator(int tx, int zoom)
     {
         return (double)tx / (1 << zoom) * TWO_PI - PI;
     }
@@ -136,7 +136,7 @@ public static partial class PlanetUtils
     /// <param name="ty">Tile y-coordinate</param>
     /// <param name="zoom">Zoom level (determines the total number of tiles at this zoom)</param>
     /// <returns>Latitude of the tile's northern edge, in radians.</returns>
-    public static double TileCoordinateToLatitude(int ty, int zoom)
+    public static double TileCoordinateToLatitudeWebMercator(int ty, int zoom)
     {
         double n = PI - (2.0 * PI * ty / (1 << zoom));
         return Math.Atan(0.5 * (Math.Exp(n) - Math.Exp(-n)));
@@ -164,10 +164,10 @@ public static partial class PlanetUtils
     public static (double latMin, double latMax, double lonMin, double lonMax) GetTileLatLonBounds(int tx, int ty,
         int zoom)
     {
-        double lonMin = TileCoordinateToLongitude(tx, zoom);
-        double lonMax = TileCoordinateToLongitude(tx + 1, zoom);
-        double latMin = TileCoordinateToLatitude(ty + 1, zoom);
-        double latMax = TileCoordinateToLatitude(ty, zoom);
+        double lonMin = TileCoordinateToLongitudeWebMercator(tx, zoom);
+        double lonMax = TileCoordinateToLongitudeWebMercator(tx + 1, zoom);
+        double latMin = TileCoordinateToLatitudeWebMercator(ty + 1, zoom);
+        double latMax = TileCoordinateToLatitudeWebMercator(ty, zoom);
         return (latMin, latMax, lonMin, lonMax);
     }
 
@@ -227,20 +227,20 @@ public static partial class PlanetUtils
     /// <summary>
     /// Computes the center latitude of a tile given its row index and zoom level.
     /// </summary>
-    public static double ComputeCenterLatitude(int latTileCoo, int zoom)
+    public static double ComputeCenterLatitudeWebMercator(int latTileCoo, int zoom)
     {
-        double northEdge = TileCoordinateToLatitude(latTileCoo, zoom);
-        double latRange = TileToLatRange(latTileCoo, zoom);
+        double northEdge = TileCoordinateToLatitudeWebMercator(latTileCoo, zoom);
+        double latRange = TileToLatRangeWebMercator(latTileCoo, zoom);
         return northEdge - latRange / 2;
     }
 
     /// <summary>
     /// Computes the center longitude of a tile given its column index and zoom level.
     /// </summary>
-    public static double ComputeCenterLongitude(int lonTileCoo, int zoom)
+    public static double ComputeCenterLongitudeWebMercator(int lonTileCoo, int zoom)
     {
-        double westEdge = TileCoordinateToLongitude(lonTileCoo, zoom);
-        double lonRange = TileToLonRange(zoom);
+        double westEdge = TileCoordinateToLongitudeWebMercator(lonTileCoo, zoom);
+        double lonRange = TileToLonRangeWebMercator(zoom);
         return westEdge + lonRange / 2;
     }
 
@@ -248,7 +248,7 @@ public static partial class PlanetUtils
     /// <summary>
     /// Returns the number of radians of latitude that a tile spans at a given tile row and zoom level.
     /// </summary>
-    public static double TileToLatRange(int tileY, int zoom)
+    public static double TileToLatRangeWebMercator(int tileY, int zoom)
     {
         if (zoom == 0)
         {
@@ -256,11 +256,11 @@ public static partial class PlanetUtils
         }
 
         // Compute the top (northern) latitude of the tile
-        double latTop = TileCoordinateToLatitude(tileY, zoom);
+        double latTop = TileCoordinateToLatitudeWebMercator(tileY, zoom);
 
         // Compute the bottom (southern) latitude of the tile, which is just
         // the northern part of the tile below us
-        double latBottom = TileCoordinateToLatitude(tileY + 1, zoom);
+        double latBottom = TileCoordinateToLatitudeWebMercator(tileY + 1, zoom);
 
         // The difference in latitude (in radians) is:
         return latTop - latBottom;
@@ -269,7 +269,7 @@ public static partial class PlanetUtils
     /// <summary>
     /// Returns the number of radians of longitude that a tile spans at a given zoom level.
     /// </summary>
-    public static double TileToLonRange(int zoom)
+    public static double TileToLonRangeWebMercator(int zoom)
     {
         // The full 360° (2π) of longitude is divided evenly among 2^zoom tiles.
         return TWO_PI / (1 << zoom);

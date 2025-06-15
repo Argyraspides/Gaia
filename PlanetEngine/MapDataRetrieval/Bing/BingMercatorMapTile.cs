@@ -61,8 +61,8 @@ public class BingMercatorMapTile : MapTile
         LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(Latitude, ZoomLevel);
         LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(Longitude, ZoomLevel);
 
-        LatitudeRange = PlanetUtils.TileToLatRange(LatitudeTileCoo, ZoomLevel);
-        LongitudeRange = PlanetUtils.TileToLonRange(LongitudeTileCoo);
+        LatitudeRange = PlanetUtils.TileToLatRangeWebMercator(LatitudeTileCoo, ZoomLevel);
+        LongitudeRange = PlanetUtils.TileToLonRangeWebMercator(LongitudeTileCoo);
 
         if (imageData != null)
         {

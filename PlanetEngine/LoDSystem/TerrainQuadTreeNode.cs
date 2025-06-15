@@ -34,6 +34,7 @@ public sealed partial class TerrainQuadTreeNode : Node3D
     // We aren't allowed to obtain the position property of nodes in the scene tree from other threads.
     // Here we store a copy of the terrain quad tree node's position and visibility (derived from TerrainChunk)
     // which are needed to determine conditions under which nodes need to be split/merged
+    // TODO:: I dont like this solution fix it !!
     public Vector3 Position { get; set; }
     public bool IsDeepest { get; set; }
 

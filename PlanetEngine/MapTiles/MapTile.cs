@@ -46,8 +46,8 @@ public class MapTile : GaiaResource
         LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(Latitude, ZoomLevel);
         LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(Longitude, ZoomLevel);
 
-        LatitudeRange = PlanetUtils.TileToLatRange(LatitudeTileCoo, ZoomLevel);
-        LongitudeRange = PlanetUtils.TileToLonRange(ZoomLevel);
+        LatitudeRange = PlanetUtils.TileToLatRangeWebMercator(LatitudeTileCoo, ZoomLevel);
+        LongitudeRange = PlanetUtils.TileToLonRangeWebMercator(ZoomLevel);
 
         AutoDetermineFields(Latitude, Longitude, ZoomLevel);
     }
@@ -66,8 +66,8 @@ public class MapTile : GaiaResource
         // Automatically determine tile coordinate, latitude/longitude range
         LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(latitude, zoomLevel);
         LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(longitude, zoomLevel);
-        LatitudeRange = PlanetUtils.TileToLatRange(LatitudeTileCoo, zoomLevel);
-        LongitudeRange = PlanetUtils.TileToLonRange(zoomLevel);
+        LatitudeRange = PlanetUtils.TileToLatRangeWebMercator(LatitudeTileCoo, zoomLevel);
+        LongitudeRange = PlanetUtils.TileToLonRangeWebMercator(zoomLevel);
     }
 
     public override bool IsHashable()

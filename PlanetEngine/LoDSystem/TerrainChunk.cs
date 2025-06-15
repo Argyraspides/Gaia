@@ -36,8 +36,6 @@ namespace Gaia.PlanetEngine.LoDSystem;
 /// </summary>
 public partial class TerrainChunk : Node3D
 {
-    private readonly string SHADER_PATH;
-
     public MapTile MapTile { get; private set; }
 
     /// <summary>
@@ -70,15 +68,6 @@ public partial class TerrainChunk : Node3D
         }
 
         MapTile = mapTile;
-        if (mapTile.MapTileType == MapTileType.WEB_MERCATOR_WGS84)
-        {
-            SHADER_PATH = "res://Common/Shaders/WebMercatorToWGS84Shader.gdshader";
-        }
-        else if (mapTile.MapTileType == MapTileType.UNKNOWN)
-        {
-            SHADER_PATH = null;
-            throw new Exception("Cannot create a TerrainChunk as the map tile type is unknown");
-        }
 
     }
 
@@ -111,38 +100,16 @@ public partial class TerrainChunk : Node3D
     /// <param name="texture2D">The texture to apply to the terrain.</param>
     private void ApplyTexture(Texture2D texture2D)
     {
-        if (!string.IsNullOrEmpty(SHADER_PATH))
+        var standardShader = new StandardMaterial3D();
+        standardShader.AlbedoTexture = texture2D;
+        if (!GodotUtils.IsValid(TerrainChunkMesh))
         {
-            var shaderMat = new ShaderMaterial { Shader = ResourceLoader.Load<Shader>(SHADER_PATH) };
-            shaderMat.SetName("TerrainChunkShaderMaterial");
-            shaderMat.SetShaderParameter("map_tile", texture2D);
-            shaderMat.SetShaderParameter("zoom_level", MapTile.ZoomLevel);
-            shaderMat.SetShaderParameter("tile_width", MapTile.Width);
-            shaderMat.SetShaderParameter("tile_height", MapTile.Height);
+            Logger.LogError(
+                "TerrainChunk::ApplyTexture: TerrainChunk texture could not be loaded! The TerrainChunkMesh is invalid!");
+            return;
+        }
 
-            if (GodotUtils.IsValid(TerrainChunkMesh))
-            {
-                TerrainChunkMesh.MaterialOverride = shaderMat;
-            }
-            else
-            {
-                throw new ArgumentNullException("MeshInstance3D is not a valid MeshInstance3D");
-            }
-        }
-        else
-        {
-            Logger.LogWarning("Shader material path is null or empty! Using default shader.");
-            var standardShader = new StandardMaterial3D();
-            standardShader.SetName("TerrainChunkStandardShader");
-            if (GodotUtils.IsValid(TerrainChunkMesh))
-            {
-                TerrainChunkMesh.MaterialOverride = standardShader;
-            }
-            else
-            {
-                throw new ArgumentNullException("MeshInstance3D is not a valid MeshInstance3D");
-            }
-        }
+        TerrainChunkMesh.MaterialOverride = standardShader;
     }
 
     private async Task InitializeTerrainChunkAsync()

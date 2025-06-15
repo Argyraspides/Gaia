@@ -23,72 +23,51 @@ using Gaia.Common.Utils.Godot;
 using Gaia.Common.Utils.Logging;
 using Godot;
 
-[assembly: InternalsVisibleTo("TerrainQuadTree")]
-
 
 namespace Gaia.PlanetEngine.LoDSystem;
 
-/// <summary>
-/// The purpose of this class is to run two intensive operations on two different threads to serve the
-/// TerrainQuadTree class. These are:
-/// - Culling nodes that are no longer needed when we exceed the max node threshold defined in the TerrainQuadTree class
-/// - Determining if quadtree nodes need to be split/merged.
-/// Both requiring the traversal of potentially the entire tree, thus these operations are delegated to this class
-/// which spawns one thread for each operation.
-///
-///
-/// </summary>
-public partial class TerrainQuadTreeTraverser
+public partial class TerrainQuadTree
 {
     // True if we can perform the DFS search to determine which nodes should be culled, and cull them.
     // Accessible by the TerrainQuadTree.
-    internal ManualResetEventSlim m_canPerformCulling = new ManualResetEventSlim(false);
+    private ManualResetEventSlim m_canPerformCulling = new ManualResetEventSlim(false);
 
     // True if we can perform the DFS search to determine which nodes should be split/merged
     private ManualResetEventSlim m_canPerformSearch = new ManualResetEventSlim(false);
 
-    // Injected to us by TerrainQuadTree. We set this once we have culled all nodes and determined
-    // which ones should be merged/split, so that the TerrainQuadTree can go ahead and split/merge them
-    private ManualResetEventSlim m_canUpdateQuadTree;
-
     private readonly TerrainQuadTree m_terrainQuadTree;
 
-    private Thread m_updateQuadTreeThread;
-    private Thread m_cullQuadTreeThread;
+    private Thread m_determineSplitOrMergeThread;
+    private Thread m_cullThread;
+    
     private volatile bool m_isRunning = false;
 
     private const int THREAD_JOIN_TIMEOUT_MS = 1000;
 
-    public TerrainQuadTreeTraverser(TerrainQuadTree terrainQuadTree, ManualResetEventSlim canUpdateQuadTree)
-    {
-        m_terrainQuadTree = terrainQuadTree ?? throw new ArgumentNullException(nameof(terrainQuadTree));
-        m_canUpdateQuadTree = canUpdateQuadTree ?? throw new ArgumentNullException(nameof(canUpdateQuadTree));
-    }
-
-    ~TerrainQuadTreeTraverser()
+    ~TerrainQuadTree()
     {
         Stop();
     }
 
     public void Start()
     {
-        m_updateQuadTreeThread = new Thread(DetermineSplitMergeNodeThreadFunction)
+        m_determineSplitOrMergeThread = new Thread(DetermineSplitOrMerge)
         {
             IsBackground = true, Name = "QuadTreeUpdateThread"
         };
 
-        m_cullQuadTreeThread = new Thread(StartCullingThreadFunction)
+        m_cullThread = new Thread(StartCulling)
         {
             IsBackground = true, Name = "CullQuadTreeThread"
         };
 
-        m_updateQuadTreeThread.Start();
-        m_cullQuadTreeThread.Start();
+        m_determineSplitOrMergeThread.Start();
+        m_cullThread.Start();
         m_canPerformSearch.Set();
         m_isRunning = true;
     }
 
-    private void StartCullingThreadFunction()
+    private void StartCulling()
     {
         while (m_isRunning)
         {
@@ -116,21 +95,21 @@ public partial class TerrainQuadTreeTraverser
     public void Stop()
     {
         m_isRunning = false;
-        if (m_updateQuadTreeThread != null && m_updateQuadTreeThread.IsAlive)
+        if (m_determineSplitOrMergeThread != null && m_determineSplitOrMergeThread.IsAlive)
         {
-            m_updateQuadTreeThread.Join(THREAD_JOIN_TIMEOUT_MS);
+            m_determineSplitOrMergeThread.Join(THREAD_JOIN_TIMEOUT_MS);
         }
 
-        if (m_cullQuadTreeThread != null && m_cullQuadTreeThread.IsAlive)
+        if (m_cullThread != null && m_cullThread.IsAlive)
         {
-            m_cullQuadTreeThread.Join(THREAD_JOIN_TIMEOUT_MS);
+            m_cullThread.Join(THREAD_JOIN_TIMEOUT_MS);
         }
 
         m_canPerformCulling.Dispose();
         m_canPerformSearch.Dispose();
     }
 
-    private void DetermineSplitMergeNodeThreadFunction()
+    private void DetermineSplitOrMerge()
     {
         while (m_isRunning)
         {

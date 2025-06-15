@@ -20,7 +20,7 @@ public static class GodotUtils
     {
         // Though IsInstanceValid internally check
         return node != null
-               && global::Godot.GodotObject.IsInstanceValid(node)
+               && GodotObject.IsInstanceValid(node)
                && !node.IsQueuedForDeletion();
     }
 }

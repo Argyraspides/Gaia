@@ -11,7 +11,7 @@ public static partial class MeshGenerator
     // width and height are for how big the map tile is going to be.
     // Common size is 256x256 as that is the size given back by most
     // map provider apis
-    public static MeshInstance3D GenerateWebMercatorMesh(int width, int height)
+    public static MeshInstance3D GenerateWebMercatorMesh(int width = 1, int height = 1)
     {
         PlaneMesh planeMesh = new PlaneMesh();
         

@@ -54,23 +54,24 @@ public class BingMapProvider : IMapProvider<BingMapTileQueryParameters>
             return mapTileResource;
         }
 
-        // Otherwise, query Bing (Microsoft is the GOAT right? I make fun of them yet here
-        // I am using C# and the .NET framework)
-        BingMapTileURLBuilder bingMapTileURLBuilder = new BingMapTileURLBuilder();
-        string url = bingMapTileURLBuilder.BuildUrl(queryParameters);
-
-        byte[] rawMapData = await new System.Net.Http.HttpClient().GetByteArrayAsync(url);
-
-        BingMercatorMapTile bingMercatorMapTile = new BingMercatorMapTile(
-            queryParameters.QuadKey,
-            queryParameters.MapType,
-            queryParameters.Language,
-            queryParameters.MapImageType,
-            null // TODO:: ADD BACK!!//rawMapData
-        );
-
+        // // Otherwise, query Bing (Microsoft is the GOAT right? I make fun of them yet here
+        // // I am using C# and the .NET framework)
+        // BingMapTileURLBuilder bingMapTileURLBuilder = new BingMapTileURLBuilder();
+        // string url = bingMapTileURLBuilder.BuildUrl(queryParameters);
+        //
+        // byte[] rawMapData = await new System.Net.Http.HttpClient().GetByteArrayAsync(url);
+        //
+        // BingMercatorMapTile bingMercatorMapTile = new BingMercatorMapTile(
+        //     queryParameters.QuadKey,
+        //     queryParameters.MapType,
+        //     queryParameters.Language,
+        //     queryParameters.MapImageType, 
+        //     rawMapData
+        // );
+        //
         // m_bingMapTileCacher.CacheResource(bingMercatorMapTile);
-
-        return bingMercatorMapTile;
+        //
+        // return bingMercatorMapTile;
+        return null;
     }
 }
