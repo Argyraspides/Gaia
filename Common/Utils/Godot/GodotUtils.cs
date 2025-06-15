@@ -16,7 +16,7 @@ public static class GodotUtils
     /// <param name="node">The node to check. Must be a Godot object</param>
     /// <typeparam name="T"></typeparam>
     /// <returns>True if the Godot object is valid and safe to access/use</returns>
-    public static bool IsValid<T>(this T node) where T : GodotObject
+    public static bool IsValid<T>(T node) where T : GodotObject
     {
         // Though IsInstanceValid internally check
         return node != null

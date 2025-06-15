@@ -9,16 +9,17 @@ public partial class MainCamera : Camera3D
     private float m_yaw = 0f;
     private float m_yawSpeed = 0.001f;
 
-    private float m_moveSpeed = 0.1f;
+    [Export]
+    private float m_moveSpeed = 1.0f;
     
     public override void _Input(InputEvent @event)
     {
-        base._Input(@event);
-        if (@event is InputEventMouseMotion mouseMotion)
-        {
-            m_yaw -= mouseMotion.Relative.X * m_yawSpeed;
-            m_pitch -= mouseMotion.Relative.Y * m_pitchSpeed;
-        }
+        // base._Input(@event);
+        // if (@event is InputEventMouseMotion mouseMotion)
+        // {
+        //     m_yaw -= mouseMotion.Relative.X * m_yawSpeed;
+        //     m_pitch -= mouseMotion.Relative.Y * m_pitchSpeed;
+        // }
     }
 
     public override void _Process(double delta)
@@ -30,9 +31,9 @@ public partial class MainCamera : Camera3D
 
     void ProcessLookAround()
     {
-        Transform3D transform = Transform;
-        transform.Basis = Basis.Identity;
-        Transform = transform;
+        // Transform3D transform = Transform;
+        // transform.Basis = Basis.Identity;
+        // Transform = transform;
 
         RotateObjectLocal(Vector3.Up, m_yaw);
         RotateObjectLocal(Vector3.Right, m_pitch); 

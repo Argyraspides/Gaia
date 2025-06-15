@@ -179,7 +179,7 @@ public sealed partial class TerrainQuadTree : Node3D
             InitializeTerrainNode(n);
         }
 
-        // Start();
+        Start();
     }
 
     private void InitializeTerrainNode(TerrainQuadTreeNode node)
@@ -199,12 +199,7 @@ public sealed partial class TerrainQuadTree : Node3D
             node.Chunk.MapTile.LatitudeTileCoo
         );
 
-        node.Chunk.MeshInstance = 
-            MeshGenerator.GenerateWebMercatorMesh(
-                // node.Chunk.MapTile.Width, 
-                // node.Chunk.MapTile.Height
-            );
-        
+        node.Chunk.MeshInstance = MeshGenerator.GenerateWebMercatorMesh();
         node.Chunk.Load();  
     }
 

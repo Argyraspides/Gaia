@@ -28,14 +28,9 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public partial class TerrainQuadTree
 {
-    // True if we can perform the DFS search to determine which nodes should be culled, and cull them.
-    // Accessible by the TerrainQuadTree.
     private ManualResetEventSlim m_canPerformCulling = new ManualResetEventSlim(false);
 
-    // True if we can perform the DFS search to determine which nodes should be split/merged
     private ManualResetEventSlim m_canPerformSearch = new ManualResetEventSlim(false);
-
-    private readonly TerrainQuadTree m_terrainQuadTree;
 
     private Thread m_determineSplitOrMergeThread;
     private Thread m_cullThread;
@@ -74,9 +69,8 @@ public partial class TerrainQuadTree
             m_canPerformCulling.Wait();
             try
             {
-                if (m_terrainQuadTree.RootNodes == null) continue;
 
-                foreach (var rootNode in m_terrainQuadTree.RootNodes)
+                foreach (var rootNode in RootNodes)
                 {
                     if (!GodotUtils.IsValid(rootNode) || !ExceedsMaxNodeThreshold()) continue;
                     CullUnusedNodes(rootNode);
@@ -116,9 +110,8 @@ public partial class TerrainQuadTree
             m_canPerformSearch.Wait();
             try
             {
-                if (m_terrainQuadTree.RootNodes == null) continue;
 
-                foreach (var rootNode in m_terrainQuadTree.RootNodes)
+                foreach (var rootNode in RootNodes)
                 {
                     DetermineSplitMergeNodes(rootNode, null);
                 }
@@ -140,7 +133,7 @@ public partial class TerrainQuadTree
         // Splitting happens top-down, so we do it first prior to recursing down further
         if (node.IsDeepest && ShouldSplit(node))
         {
-            m_terrainQuadTree.SplitQueueNodes.Enqueue(node);
+            SplitQueueNodes.Enqueue(node);
             return;
         }
 
@@ -152,50 +145,43 @@ public partial class TerrainQuadTree
         // Merging happens bottom-up, so we do it after recursing down the tree
         if (ShouldMergeChildren(node))
         {
-            m_terrainQuadTree.MergeQueueNodes.Enqueue(node);
+            MergeQueueNodes.Enqueue(node);
         }
     }
 
     private bool ExceedsMaxNodeThreshold()
     {
-        return m_terrainQuadTree.CurrentNodeCount >
-               m_terrainQuadTree.MaxNodes *
-               m_terrainQuadTree.MaxNodesCleanupThresholdPercent;
+        return CurrentNodeCount >
+               MaxNodes *
+               MaxNodesCleanupThresholdPercent;
     }
 
-    // TODO::ARGYRASPIDES() { Make these not just distance based but also based on what is visible on the screen.
-    // Sometimes the center of the screen is more detailed than the rest and it can look jarring if the map tiles
-    // are from completely different times }
     private bool ShouldSplit(TerrainQuadTreeNode node)
     {
-        if (!GodotUtils.IsValid(node)) throw new ArgumentNullException(nameof(node), "node cannot be null");
-        if (node.Depth >= m_terrainQuadTree.MaxDepth) return false;
+        // if (!GodotUtils.IsValid(node)) throw new ArgumentNullException(nameof(node), "node cannot be null");
+        // if (node.Depth >= MaxDepth) return false;
+        //
+        // float distanceToCamera = node.Position.DistanceTo(CameraPosition);
+        // bool shouldSplit = SplitThresholds[node.Depth] > distanceToCamera;
+        //
+        // return shouldSplit;
 
-        float distanceToCamera = node.Position.DistanceTo(m_terrainQuadTree.CameraPosition);
-        bool shouldSplit = m_terrainQuadTree.SplitThresholds[node.Depth] > distanceToCamera;
-
-        return shouldSplit;
+        return false;
     }
 
     private bool ShouldMerge(TerrainQuadTreeNode node)
     {
-        if (!GodotUtils.IsValid(node)) return false;
-        if (node.Depth < m_terrainQuadTree.MinDepth) return false;
+        // if (!GodotUtils.IsValid(node)) return false;
+        // if (node.Depth < MinDepth) return false;
+        //
+        // float distanceToCamera = node.Position.DistanceTo(CameraPosition);
+        // bool shouldMerge = MergeThresholds[node.Depth] < distanceToCamera;
+        //
+        // return shouldMerge;
 
-        float distanceToCamera = node.Position.DistanceTo(m_terrainQuadTree.CameraPosition);
-        bool shouldMerge = m_terrainQuadTree.MergeThresholds[node.Depth] < distanceToCamera;
-
-        return shouldMerge;
+        return false;
     }
 
-    /// <summary>
-    /// Checks if we should merge the children of the terrain quad tree node.
-    /// In the LoD system, we only split as far as we need to, thus leaf nodes are
-    /// the ones visible in the scene tree. We only merge the children back into the parent
-    /// if ALL children are too far from the camera.
-    /// </summary>
-    /// <param name="parentNode">Parent node whose children will be tested for merging</param>
-    /// <returns>True if the parents children should be merged, otherwise false</returns>
     private bool ShouldMergeChildren(TerrainQuadTreeNode parentNode)
     {
         if (!GodotUtils.IsValid(parentNode)) return false;
@@ -211,11 +197,6 @@ public partial class TerrainQuadTree
         return true;
     }
 
-    /// <summary>
-    /// Removes a quadtree node from the scene tree itself. The object will be deleted in the Godot world,
-    /// but not in the C# world
-    /// </summary>
-    /// <param name="node"></param>
     private void RemoveQuadTreeNode(TerrainQuadTreeNode node)
     {
         if (GodotUtils.IsValid(node))
@@ -224,10 +205,6 @@ public partial class TerrainQuadTree
         }
     }
 
-    /// <summary>
-    /// Completely removes the entire subtree of the parent node
-    /// </summary>
-    /// <param name="parent"></param>
     private void RemoveSubQuadTreeThreadSafe(TerrainQuadTreeNode parent)
     {
         if (!GodotUtils.IsValid(parent)) return;
@@ -239,11 +216,6 @@ public partial class TerrainQuadTree
         }
     }
 
-    /// <summary>
-    /// Culls any unused nodes in the scene tree. An unused node is any node which is not visible (hence not
-    /// useful to the player) AND has no visible ancestors.
-    /// </summary>
-    /// <param name="parentNode">The parent node whose entire subtree will be culled</param>
     private void CullUnusedNodes(TerrainQuadTreeNode parentNode)
     {
         if (!GodotUtils.IsValid(parentNode)) return;

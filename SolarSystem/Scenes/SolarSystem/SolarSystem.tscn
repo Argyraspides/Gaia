@@ -19,7 +19,11 @@ environment = SubResource("Environment_xash6")
 script = ExtResource("2_obgtn")
 
 [node name="MainCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 10, 0)
 script = ExtResource("3_jbp3p")
+m_moveSpeed = 0.25
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="MainCamera"]
+[node name="DirectionalLight3D" type="OmniLight3D" parent="MainCamera"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0444389, 0.999012)
+light_energy = 20.0
+omni_range = 50.0

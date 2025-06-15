@@ -73,8 +73,6 @@ public partial class TerrainChunk : Node3D
 
     public async void Load()
     {
-        try
-        {
             if (GodotUtils.IsValid(TerrainChunkMesh))
             {
                 AddChild(TerrainChunkMesh);
@@ -82,13 +80,8 @@ public partial class TerrainChunk : Node3D
             }
             else
             {
-                throw new Exception("MeshInstance3D is not a valid MeshInstance3D");
+                Logger.LogError("TerrainChunk::Load() - TerrainChunkMesh is not a valid MeshInstance3D");
             }
-        }
-        catch (Exception ex)
-        {
-            GD.PrintErr($"Failed to initialize terrain: {ex}");
-        }
     }
 
     /// <summary>
