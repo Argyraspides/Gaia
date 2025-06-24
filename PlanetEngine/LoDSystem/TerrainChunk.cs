@@ -38,19 +38,8 @@ public partial class TerrainChunk : Node3D
 {
     public MapTile MapTile { get; private set; }
 
-    /// <summary>
-    /// Gets or sets the mesh that will define the geometry of the chunk.
-    /// In general, if the mesh includes the poles of the planet,
-    /// the mesh will be triangular. Otherwise, it will be a quadrilateral.
-    /// </summary>
     public MeshInstance3D TerrainChunkMesh { get; private set; }
 
-
-    /// <summary>
-    /// Gets or sets the shader material used for map reprojection.
-    /// E.g., warping a Web-Mercator projection map tile
-    /// such that it can be fit to an ellipsoid.
-    /// </summary>
     public ShaderMaterial ShaderMaterial { get; private set; }
 
 
@@ -73,28 +62,22 @@ public partial class TerrainChunk : Node3D
 
     public async void Load()
     {
-            if (GodotUtils.IsValid(TerrainChunkMesh))
-            {
-                AddChild(TerrainChunkMesh);
-                await InitializeTerrainChunkAsync();
-            }
-            else
-            {
-                Logger.LogError("TerrainChunk::Load() - TerrainChunkMesh is not a valid MeshInstance3D");
-            }
+        if (GodotUtils.IsValid(TerrainChunkMesh))
+        {
+            AddChild(TerrainChunkMesh);
+            await InitializeTerrainChunkAsync();
+        }
+        else
+        {
+            Logger.LogError("TerrainChunk::Load() - TerrainChunkMesh is not a valid MeshInstance3D");
+        }
     }
 
-    /// <summary>
-    /// Applies a texture to the terrain chunk's mesh and configures shader parameters
-    /// for Web Mercator to WGS84 reprojection. The shader transforms the flat map
-    /// projection into the correct spherical coordinates for the planet's surface.
-    /// Also applies a scale correction to handle east-west texture inversion.
-    /// </summary>
-    /// <param name="texture2D">The texture to apply to the terrain.</param>
     private void ApplyTexture(Texture2D texture2D)
     {
         var standardShader = new StandardMaterial3D();
-        standardShader.AlbedoTexture = texture2D;
+        // standardShader.AlbedoTexture = texture2D;
+        standardShader.AlbedoColor = Colors.DarkBlue;
         if (!GodotUtils.IsValid(TerrainChunkMesh))
         {
             Logger.LogError(
@@ -107,21 +90,21 @@ public partial class TerrainChunk : Node3D
 
     private async Task InitializeTerrainChunkAsync()
     {
-        MapTile mapTile = await MapAPI.RequestMapTileAsync(
-            (float)MapTile.Latitude,
-            (float)MapTile.Longitude,
-            MapTile.ZoomLevel,
-            MapTile.MapType,
-            MapTile.MapImageType,
-            MapTile.MapTileType
-        );
-
-        if (mapTile == null)
-        {
-            throw new Exception("Failed to initialize map tile");
-        }
-
-        ApplyTexture(mapTile.Texture2D);
+        // MapTile mapTile = await MapAPI.RequestMapTileAsync(
+        //     (float)MapTile.Latitude,
+        //     (float)MapTile.Longitude,
+        //     MapTile.ZoomLevel,
+        //     MapTile.MapType,
+        //     MapTile.MapImageType,
+        //     MapTile.MapTileType
+        // );
+        //
+        // if (mapTile == null)
+        // {
+        //     throw new Exception("Failed to initialize map tile");
+        // }
+        
+        ApplyTexture(null);
     }
 
 }

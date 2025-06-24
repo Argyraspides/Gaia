@@ -10,7 +10,7 @@ public partial class MainCamera : Camera3D
     private float m_yawSpeed = 0.001f;
 
     [Export]
-    private float m_moveSpeed = 1.0f;
+    private float m_moveSpeed = 5.0f;
     
     public override void _Input(InputEvent @event)
     {

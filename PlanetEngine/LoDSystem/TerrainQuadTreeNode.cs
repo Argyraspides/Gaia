@@ -35,8 +35,12 @@ public sealed partial class TerrainQuadTreeNode : Node3D
     // Here we store a copy of the terrain quad tree node's position and visibility (derived from TerrainChunk)
     // which are needed to determine conditions under which nodes need to be split/merged
     // TODO:: I dont like this solution fix it !!
-    public Vector3 Position { get; set; }
-    public bool IsDeepest { get; set; }
+    public Vector3 GlobalPositionCpy { get; set; }
+    
+    // Not the actual deepest node (i.e., a leaf) but the deepest
+    // node which is also currently visible in the scene tree (fits LoD constraints
+    // to still be shown to the user)
+    public bool IsDeepestVisible { get; set; }
 
     public TerrainQuadTreeNode(TerrainChunk chunk, int depth)
     {

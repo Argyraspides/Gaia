@@ -513,6 +513,25 @@ public static partial class PlanetUtils
 
         return new Vector2((float)x, (float)y);
     }
+    
+    public static Vector2 LatLonToCartesianWebMercatorNormalized(double lat, double lon)
+    {
+        if (lat < MIN_LATITUDE_LEVEL_WEB_MERCATOR || lat > MAX_LATITUDE_LEVEL_WEB_MERCATOR)
+        {
+            throw new ArgumentOutOfRangeException("Latitude outside the proper range for a web mercator projection!");
+        }
+
+        // For longitude: direct linear mapping (convert from [-π,π] to [0,2π] first)
+        // Then scale by Earth's radius and center
+        lon += Math.PI;
+        double x = lon / (2 * Math.PI);
+
+        // For latitude: Web Mercator formula
+        // y = R * ln(tan(π/4 + φ/2)) where φ is latitude
+        double y = Math.Log(Math.Tan(Math.PI / 4 + lat / 2)) / Math.PI;
+
+        return new Vector2((float)x, (float)y);
+    }
 
     public static (double, double) GetPlanetSemiMajorAxis(PlanetShapeType shapeType)
     {
