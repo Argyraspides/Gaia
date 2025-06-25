@@ -9,25 +9,29 @@ namespace Gaia.PlanetEngine.LoDSystem;
 public partial class TerrainQuadTree
 {
     
-    private ManualResetEventSlim m_canPerformCulling = new ManualResetEventSlim(false);
-    private Thread m_cullThread;
+    private ManualResetEventSlim CanPerformCulling = new ManualResetEventSlim(false);
+    private Thread CullThread;
+    
+    // True when we receive a notification that TerrainQuadTree is about to be deleted
+    private bool DestructorActivated = false;
     
     private void StartCulling()
     {
         while (m_isRunning)
         {
-            m_canPerformCulling.Wait();
+            CanPerformCulling.Wait();
             try
             {
 
                 foreach (var rootNode in RootNodes)
                 {
-                    if (!ExceedsMaxNodeThreshold()) continue;
+                    if (!ExceedsMaxNodeThreshold()) break;
+                    Logger.LogWarning($"Exceeded max node count! Culling now!");
                     CullUnusedNodes(rootNode);
                 }
 
-                m_canPerformCulling.Reset();
-                m_canPerformSearch.Set();
+                CanPerformCulling.Reset();
+                CanPerformSearch.Set();
             }
             catch (Exception ex)
             {
@@ -43,12 +47,11 @@ public partial class TerrainQuadTree
         // We only want to cull nodes BELOW the ones that are currently visible in the scene
         if (parentNode.IsDeepestVisible || !NodeVisibleToCamera(parentNode))
         {
-            // Cull all sub-trees below the parent
+            Logger.LogError("Found suitable nodes to cull! Culling now!");
             RemoveSubQuadTreeThreadSafe(parentNode);
             return;
         }
 
-        // Recursively destroy all nodes
         foreach (var terrainQuadTreeNode in parentNode.ChildNodes)
         {
             if (GodotUtils.IsValid(terrainQuadTreeNode))
@@ -89,4 +92,18 @@ public partial class TerrainQuadTree
         }
     }
     
+    public override void _Notification(int what)
+    {
+        if (what == NotificationPredelete)
+        {
+            DestructorActivated = true;
+        }
+        // We don't want to attempt to GetTree().GetNodeCount() when the scene tree (or at the very least,
+        // the TerrainQuadTree) is about to be deleted.
+        else if (!DestructorActivated && what == NotificationChildOrderChanged)
+        {
+            CurrentNodeCount = GetTree().GetNodeCount();
+            Logger.LogInfo($"Current node count: {CurrentNodeCount}");
+        }
+    }
 }

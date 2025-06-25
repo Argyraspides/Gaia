@@ -42,7 +42,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
     public int CurrentNodeCount { get; private set; }
 
-    private ManualResetEventSlim m_canUpdateQuadTree = new ManualResetEventSlim(false);
+    private ManualResetEventSlim CanUpdateQuadTree = new ManualResetEventSlim(false);
 
     public List<TerrainQuadTreeNode> RootNodes { get; private set; }
 
@@ -103,7 +103,7 @@ public sealed partial class TerrainQuadTree : Node3D
     {
         CameraPosition = m_camera.GlobalPosition;
 
-        if (m_canUpdateQuadTree.IsSet)
+        if (CanUpdateQuadTree.IsSet)
         {
             ProcessSplitQueue();
             ProcessMergeQueue();
@@ -111,8 +111,8 @@ public sealed partial class TerrainQuadTree : Node3D
 
         if (SplitQueueNodes.IsEmpty && MergeQueueNodes.IsEmpty)
         {
-            m_canUpdateQuadTree.Reset();
-            m_canPerformCulling.Set();
+            CanUpdateQuadTree.Reset();
+            CanPerformCulling.Set();
         }
     }
 
@@ -153,37 +153,37 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private void Start()
     {
-        m_determineSplitOrMergeThread = new Thread(DetermineSplitOrMerge)
+        SplitOrMergeSearchThread = new Thread(DetermineSplitOrMerge)
         {
             IsBackground = true, Name = "QuadTreeUpdateThread"
         };
 
-        m_cullThread = new Thread(StartCulling)
+        CullThread = new Thread(StartCulling)
         {
             IsBackground = true, Name = "CullQuadTreeThread"
         };
 
-        m_determineSplitOrMergeThread.Start();
-        m_cullThread.Start();
-        m_canPerformSearch.Set();
+        SplitOrMergeSearchThread.Start();
+        CullThread.Start();
+        CanPerformSearch.Set();
         m_isRunning = true;
     }
 
     private void Stop()
     {
         m_isRunning = false;
-        if (m_determineSplitOrMergeThread != null && m_determineSplitOrMergeThread.IsAlive)
+        if (SplitOrMergeSearchThread != null && SplitOrMergeSearchThread.IsAlive)
         {
-            m_determineSplitOrMergeThread.Join(THREAD_JOIN_TIMEOUT_MS);
+            SplitOrMergeSearchThread.Join(THREAD_JOIN_TIMEOUT_MS);
         }
 
-        if (m_cullThread != null && m_cullThread.IsAlive)
+        if (CullThread != null && CullThread.IsAlive)
         {
-            m_cullThread.Join(THREAD_JOIN_TIMEOUT_MS);
+            CullThread.Join(THREAD_JOIN_TIMEOUT_MS);
         }
 
-        m_canPerformCulling.Dispose();
-        m_canPerformSearch.Dispose();
+        CanPerformCulling.Dispose();
+        CanPerformSearch.Dispose();
     }
     
     ~TerrainQuadTree()
@@ -284,7 +284,7 @@ public sealed partial class TerrainQuadTree : Node3D
         }
 
         node.IsDeepestVisible = false;
-        // node.Chunk.Visible = false;
+        node.Chunk.Visible = false;
     }
 
     private void MergeNodeChildren(TerrainQuadTreeNode parent)
@@ -361,8 +361,12 @@ public sealed partial class TerrainQuadTree : Node3D
                         MapTileType.WEB_MERCATOR_EARTH)
             );
         childChunk.SetName("TerrainChunk");
+        
         var terrainQuadTreeNode = new TerrainQuadTreeNode(childChunk, zoomLevel);
+        CurrentNodeCount++;
+        
         terrainQuadTreeNode.SetName("TerrainQuadTreeNode");
+        
         return terrainQuadTreeNode;
     }
 }

@@ -28,11 +28,11 @@ namespace Gaia.PlanetEngine.LoDSystem;
 public partial class TerrainQuadTree
 {
 
-    private ManualResetEventSlim m_canPerformSearch = new ManualResetEventSlim(false);
+    private ManualResetEventSlim CanPerformSearch = new ManualResetEventSlim(false);
 
-    private Thread m_determineSplitOrMergeThread;
+    private Thread SplitOrMergeSearchThread;
     
-    private volatile bool m_isRunning = false;
+    private volatile bool m_isRunning;
 
     private const int THREAD_JOIN_TIMEOUT_MS = 1000;
 
@@ -40,7 +40,7 @@ public partial class TerrainQuadTree
     {
         while (m_isRunning)
         {
-            m_canPerformSearch.Wait();
+            CanPerformSearch.Wait();
             try
             {
 
@@ -49,8 +49,8 @@ public partial class TerrainQuadTree
                     DetermineSplitMergeNodes(rootNode, null);
                 }
 
-                m_canUpdateQuadTree.Set();
-                m_canPerformSearch.Reset();
+                CanUpdateQuadTree.Set();
+                CanPerformSearch.Reset();
             }
             catch (Exception ex)
             {
@@ -82,8 +82,7 @@ public partial class TerrainQuadTree
         }
     }
 
-    private int splitCt = 0;
-
+    // Should we split into four new nodes?
     private bool ShouldSplit(TerrainQuadTreeNode node)
     {
         if (!GodotUtils.IsValid(node)) throw new ArgumentNullException(nameof(node), "node cannot be null");
@@ -95,10 +94,12 @@ public partial class TerrainQuadTree
         return shouldSplit;
     }
 
+    // Should we merge back into our parent?
     private bool ShouldMerge(TerrainQuadTreeNode node)
     {
         if (!GodotUtils.IsValid(node)) return false;
         if (node.Depth < MinDepth) return false;
+        if (!node.IsDeepestVisible) return false;
         
         float distanceToCamera = node.GlobalPositionCpy.DistanceTo(CameraPosition);
         bool shouldMerge = MergeThresholds[node.Depth] < distanceToCamera;
