@@ -198,6 +198,9 @@ public sealed partial class TerrainQuadTree : Node3D
             return;
         }
         
+        // TODO:: remember quadtree should be generic so this idea of width/height and also
+        // mercator specific stuff should be completely out of the question. ONLY thing allowed is
+        // tiles
         float worldWidth = 1000;
         float worldHeight = 1000;
 
@@ -217,6 +220,7 @@ public sealed partial class TerrainQuadTree : Node3D
         node.GlobalPosition = new Vector3(xCoo, 0.0f, zCoo);
         node.GlobalPositionCpy = node.GlobalPosition;
 
+        // todo:: stop mercator assumption!!
         node.Chunk.MeshInstance = MeshGenerator.GenerateWebMercatorMesh();
         node.Chunk.Load();  
         
@@ -352,6 +356,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private TerrainQuadTreeNode CreateNode(int latTileCoo, int lonTileCoo, int zoomLevel)
     {
+        // todo:: no mercator assumptions man!~!
         double childCenterLat = PlanetUtils.ComputeCenterLatitudeWebMercator(latTileCoo, zoomLevel);
         double childCenterLon = PlanetUtils.ComputeCenterLongitudeWebMercator(lonTileCoo, zoomLevel);
 

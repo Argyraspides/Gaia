@@ -64,6 +64,7 @@ public class MapTile : GaiaResource
     private void AutoDetermineFields(double latitude, double longitude, int zoomLevel)
     {
         // Automatically determine tile coordinate, latitude/longitude range
+        // TODO:: again with this BS you're doing mercator assumptions again stop this shit
         LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(latitude, zoomLevel);
         LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(longitude, zoomLevel);
         LatitudeRange = PlanetUtils.TileToLatRangeWebMercator(LatitudeTileCoo, zoomLevel);
