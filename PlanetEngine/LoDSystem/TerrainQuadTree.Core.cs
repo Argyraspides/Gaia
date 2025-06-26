@@ -39,9 +39,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
     public double[] SplitThresholds { get; private set; }
     public double[] MergeThresholds { get; private set; }
-
-    public int CurrentNodeCount { get; private set; }
-
+    
     private ManualResetEventSlim CanUpdateQuadTree = new ManualResetEventSlim(false);
 
     public List<TerrainQuadTreeNode> RootNodes { get; private set; }
@@ -64,6 +62,8 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private const int MAX_DEPTH_LIMIT = 23;
     private const int MIN_DEPTH_LIMIT = 1;
+    
+    private const string NodeGroupName = "TerrainQuadTreeNodes";
 
     private readonly double[] m_baseAltitudeThresholds = new double[]
     { 1000, 500, 250, 125, 100, 90, 80, 75, 70, 55, 30, 25, 15 };
@@ -102,7 +102,6 @@ public sealed partial class TerrainQuadTree : Node3D
     public override void _Process(double delta)
     {
         CameraPosition = m_camera.GlobalPosition;
-
         if (CanUpdateQuadTree.IsSet)
         {
             ProcessSplitQueue();
@@ -143,8 +142,8 @@ public sealed partial class TerrainQuadTree : Node3D
             n.IsDeepestVisible = true;
             n.Name = $"TerrainQuadTreeNode_{latTileCoo}_{lonTileCoo}";
 
-            AddChild(n);
             RootNodes.Add(n);
+            AddChild(n);
             InitializeTerrainNode(n);
         }
 
@@ -220,6 +219,8 @@ public sealed partial class TerrainQuadTree : Node3D
 
         node.Chunk.MeshInstance = MeshGenerator.GenerateWebMercatorMesh();
         node.Chunk.Load();  
+        
+        node.AddToGroup(NodeGroupName);
     }
 
     private void InitializeAltitudeThresholds()
@@ -333,19 +334,20 @@ public sealed partial class TerrainQuadTree : Node3D
 
         for (int i = 0; i < 4; i++)
         {
-            (int childLatTileCoo, int childLonTileCoo) =
-                CalculateChildTileCoordinates(parentLatTileCoo, parentLonTileCoo, i);
-            parentNode.ChildNodes[i] = CreateNode(childLatTileCoo, childLonTileCoo, childZoomLevel);
-            parentNode.AddChild(parentNode.ChildNodes[i]);
+            Vector2I childCoos = GetChildTileCoordinates(parentLatTileCoo, parentLonTileCoo, i);
+            TerrainQuadTreeNode newNode = CreateNode(childCoos.Y, childCoos.X, childZoomLevel);
+            newNode.Name = $"TerrainQuadTreeNode_{newNode.Chunk.MapTile.LatitudeTileCoo}_{newNode.Chunk.MapTile.LongitudeTileCoo}";
+            parentNode.ChildNodes[i] = newNode;
+            parentNode.AddChild(newNode);
         }
     }
 
-    private (int childLatTileCoo, int childLonTileCoo) CalculateChildTileCoordinates(int parentLatTileCoo,
+    private Vector2I GetChildTileCoordinates(int parentLatTileCoo,
         int parentLonTileCoo, int childIndex)
     {
         int childLatTileCoo = parentLatTileCoo * 2 + ((childIndex == 2 || childIndex == 3) ? 1 : 0);
         int childLonTileCoo = parentLonTileCoo * 2 + ((childIndex == 1 || childIndex == 3) ? 1 : 0);
-        return (childLatTileCoo, childLonTileCoo);
+        return new Vector2I(childLonTileCoo, childLatTileCoo);
     }
 
     private TerrainQuadTreeNode CreateNode(int latTileCoo, int lonTileCoo, int zoomLevel)
@@ -363,7 +365,6 @@ public sealed partial class TerrainQuadTree : Node3D
         childChunk.SetName("TerrainChunk");
         
         var terrainQuadTreeNode = new TerrainQuadTreeNode(childChunk, zoomLevel);
-        CurrentNodeCount++;
         
         terrainQuadTreeNode.SetName("TerrainQuadTreeNode");
         

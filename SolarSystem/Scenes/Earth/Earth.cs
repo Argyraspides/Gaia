@@ -24,6 +24,7 @@ public partial class Earth : Node3D
         GetViewport().SetDebugDraw(Viewport.DebugDrawEnum.Wireframe);
         base._Ready();
         m_terrainQuadTree = new TerrainQuadTree(m_camera, m_mapTileType);
+        m_terrainQuadTree.Name = "EarthTerrainQuadTree";
         AddChild(m_terrainQuadTree);
         m_terrainQuadTree.InitializeQuadTree(0);
     }

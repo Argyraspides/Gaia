@@ -85,7 +85,7 @@ public partial class TerrainQuadTree
     // Should we split into four new nodes?
     private bool ShouldSplit(TerrainQuadTreeNode node)
     {
-        if (!GodotUtils.IsValid(node)) throw new ArgumentNullException(nameof(node), "node cannot be null");
+        if (!GodotUtils.IsValid(node)) return false;
         if (node.Depth >= MaxDepth) return false;
         
         float distanceToCamera = node.GlobalPositionCpy.DistanceTo(CameraPosition);

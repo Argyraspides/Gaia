@@ -11,10 +11,7 @@ public partial class TerrainQuadTree
     
     private ManualResetEventSlim CanPerformCulling = new ManualResetEventSlim(false);
     private Thread CullThread;
-    
-    // True when we receive a notification that TerrainQuadTree is about to be deleted
-    private bool DestructorActivated = false;
-    
+
     private void StartCulling()
     {
         while (m_isRunning)
@@ -26,8 +23,7 @@ public partial class TerrainQuadTree
                 foreach (var rootNode in RootNodes)
                 {
                     if (!ExceedsMaxNodeThreshold()) break;
-                    Logger.LogWarning($"Exceeded max node count! Culling now!");
-                    CullUnusedNodes(rootNode);
+                   CullUnusedNodes(rootNode);
                 }
 
                 CanPerformCulling.Reset();
@@ -45,19 +41,15 @@ public partial class TerrainQuadTree
         if (!GodotUtils.IsValid(parentNode)) return;
 
         // We only want to cull nodes BELOW the ones that are currently visible in the scene
-        if (parentNode.IsDeepestVisible || !NodeVisibleToCamera(parentNode))
+        if (parentNode.IsDeepestVisible)
         {
-            Logger.LogError("Found suitable nodes to cull! Culling now!");
             RemoveSubQuadTreeThreadSafe(parentNode);
             return;
         }
 
         foreach (var terrainQuadTreeNode in parentNode.ChildNodes)
         {
-            if (GodotUtils.IsValid(terrainQuadTreeNode))
-            {
-                CullUnusedNodes(terrainQuadTreeNode);
-            }
+            CullUnusedNodes(terrainQuadTreeNode);
         }
     }
 
@@ -76,7 +68,7 @@ public partial class TerrainQuadTree
     
     private bool ExceedsMaxNodeThreshold()
     {
-        return CurrentNodeCount >
+        return GetTree().GetNodesInGroup(NodeGroupName).Count >
                MaxNodes *
                MaxNodesCleanupThresholdPercent;
     }
@@ -84,26 +76,10 @@ public partial class TerrainQuadTree
     private void RemoveSubQuadTreeThreadSafe(TerrainQuadTreeNode parent)
     {
         if (!GodotUtils.IsValid(parent)) return;
-
+        
         foreach (var childNode in parent.ChildNodes)
         {
-            RemoveSubQuadTreeThreadSafe(childNode);
             RemoveQuadTreeNode(childNode);
-        }
-    }
-    
-    public override void _Notification(int what)
-    {
-        if (what == NotificationPredelete)
-        {
-            DestructorActivated = true;
-        }
-        // We don't want to attempt to GetTree().GetNodeCount() when the scene tree (or at the very least,
-        // the TerrainQuadTree) is about to be deleted.
-        else if (!DestructorActivated && what == NotificationChildOrderChanged)
-        {
-            CurrentNodeCount = GetTree().GetNodeCount();
-            Logger.LogInfo($"Current node count: {CurrentNodeCount}");
         }
     }
 }
