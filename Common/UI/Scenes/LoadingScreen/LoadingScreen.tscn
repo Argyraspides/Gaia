@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bp1ygw7yxrt88"]
+[gd_scene load_steps=4 format=3 uid="uid://bp1ygw7yxrt88"]
 
-[ext_resource type="Theme" uid="uid://dll7gj5amwt4g" path="res://Common/UI/Themes/DefaultTheme.tres" id="1_r0rsq"]
-[ext_resource type="Texture2D" uid="uid://bhjk68tdfdt1l" path="res://SolarSystem/Assets/ESO_-_Milky_Way.jpg" id="1_yewgs"]
+[ext_resource type="Theme" uid="uid://dll7gj5amwt4g" path="res://Common/UI/Themes/DefaultTheme.tres" id="1_muc7n"]
+[ext_resource type="Texture2D" uid="uid://bhjk68tdfdt1l" path="res://SolarSystem/Assets/ESO_-_Milky_Way.jpg" id="2_djruq"]
+[ext_resource type="Script" uid="uid://udkshg0h3pa" path="res://Common/UI/Scenes/LoadingScreen/LoadingScreen.cs" id="3_0rndp"]
 
 [node name="LoadingScreen" type="TextureRect"]
 clip_contents = true
@@ -14,8 +15,9 @@ offset_right = -0.000488281
 offset_bottom = 0.319824
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("1_r0rsq")
-texture = ExtResource("1_yewgs")
+theme = ExtResource("1_muc7n")
+texture = ExtResource("2_djruq")
+script = ExtResource("3_0rndp")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
