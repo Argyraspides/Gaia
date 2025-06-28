@@ -7,10 +7,8 @@ public partial class PlanetaryEventBus : Node
 {
     [Signal]
     public delegate void TerrainQuadTreeLoadedEventHandler();
-
     public void OnTerrainQuadTreeLoaded()
     {
-        Logger.LogInfo("PlanetaryEventBus OnTerrainQuadTreeLoaded!!!!!!!!!");
         EmitSignal(SignalName.TerrainQuadTreeLoaded);
     }
 }
