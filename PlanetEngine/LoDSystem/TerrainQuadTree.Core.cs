@@ -33,6 +33,10 @@ namespace Gaia.PlanetEngine.LoDSystem;
 public sealed partial class TerrainQuadTree : Node3D
 {
     
+    [Signal]
+    public delegate void QuadTreeLoadedEventHandler();
+    private bool _quadTreeLoaded = false; 
+    
     // Size of the world this quadtree handles in the directions of latitude/longitude
     // of said world. E.g., Earth as a globe has WorldSizeLatKm as the circumference along lines of longitude 
     public double WorldSizeLatKm { get; private set; }
@@ -71,7 +75,7 @@ public sealed partial class TerrainQuadTree : Node3D
     private const int MIN_DEPTH_LIMIT = 1;
     
     private const string NodeGroupName = "TerrainQuadTreeNodes";
-
+    
     private readonly double[] m_baseAltitudeThresholds = new double[]
     {
         156000.0f, 78000.0f, 39000.0f, 19500.0f, 9750.0f, 4875.0f, 2437.5f, 1218.75f, 609.375f, 304.6875f, 152.34f,
@@ -79,10 +83,10 @@ public sealed partial class TerrainQuadTree : Node3D
     };
 
     public TerrainQuadTree(
-        Camera3D camera, 
-        MapTileType tileType, 
+        Camera3D camera,
+        MapTileType tileType,
         int maxNodes = 10000,
-        int minDepth = 0, 
+        int minDepth = 0,
         int maxDepth = 20,
         float worldSizeLat = PlanetUtils.EARTH_POLAR_CIRCUMFERENCE_KM,
         float worldSizeLon = PlanetUtils.EARTH_EQUATORIAL_CIRCUMFERENCE_KM)
@@ -116,6 +120,12 @@ public sealed partial class TerrainQuadTree : Node3D
         WorldSizeLonKm = worldSizeLon;
 
         InitializeAltitudeThresholds();
+        QuadTreeLoaded += OnQuadTreeLoaded;
+    }
+
+    private void OnQuadTreeLoaded()
+    {
+        Logger.LogInfo($"The quadtree has successfully loaded! Current node count: {GetTree().GetNodesInGroup(NodeGroupName).Count}");
     }
 
     public override void _Process(double delta)
@@ -163,10 +173,29 @@ public sealed partial class TerrainQuadTree : Node3D
 
             RootNodes.Add(n);
             AddChild(n);
+            
+            n.Chunk.TerrainChunkLoaded += () =>
+            {
+                int currNodeCt = GetTree().GetNodesInGroup(NodeGroupName).Count;
+                if (currNodeCt == nodesInLevel)
+                {
+                    EmitQuadTreeLoaded();
+                }
+            };
+            
             InitializeTerrainNode(n);
         }
 
         Start();
+    }
+
+    private void EmitQuadTreeLoaded()
+    {
+        if (!_quadTreeLoaded)
+        {
+            EmitSignal(SignalName.QuadTreeLoaded);
+            _quadTreeLoaded = true;
+        }
     }
 
     private void Start()
@@ -216,14 +245,13 @@ public sealed partial class TerrainQuadTree : Node3D
             Logger.LogError("TerrainQuadTree::InitializeTerrainNodeMesh: Invalid terrain node!");
             return;
         }
-
+        
         node.Chunk.MeshInstance = MeshGenerator.GenerateMesh(MapTileType);
-        node.Chunk.Load();  
         node.AddToGroup(NodeGroupName);
+        node.Chunk.Load();
         
         PositionTerrainNode(node);
     }
-    
 
     private void PositionTerrainNode(TerrainQuadTreeNode node)
     {

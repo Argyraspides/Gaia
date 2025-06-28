@@ -36,6 +36,9 @@ namespace Gaia.PlanetEngine.LoDSystem;
 /// </summary>
 public partial class TerrainChunk : Node3D
 {
+    [Signal]
+    public delegate void TerrainChunkLoadedEventHandler();
+    
     public MapTile MapTile { get; private set; }
 
     public MeshInstance3D TerrainChunkMesh { get; private set; }
@@ -77,7 +80,6 @@ public partial class TerrainChunk : Node3D
     {
         var standardShader = new StandardMaterial3D();
         standardShader.AlbedoTexture = texture2D;
-        // standardShader.AlbedoColor = Colors.HotPink;
         if (!GodotUtils.IsValid(TerrainChunkMesh))
         {
             Logger.LogError(
@@ -86,6 +88,7 @@ public partial class TerrainChunk : Node3D
         }
 
         TerrainChunkMesh.MaterialOverride = standardShader;
+        EmitSignal(SignalName.TerrainChunkLoaded);
     }
 
     private async Task InitializeTerrainChunkAsync()

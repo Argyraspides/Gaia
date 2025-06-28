@@ -82,7 +82,7 @@ public static partial class PlanetUtils
 
     /// <summary>
     /// Converts line of latitude (radians) to a latitude tile coordinate (y axis) on the Mercator projection,
-    /// using a quadtree to represent the map (each successive zoom level doubles the tiles on the X and Y axis).
+    /// using a quadtree to represent    the map (each successive zoom level doubles the tiles on the X and Y axis).
     /// To understand map tiling, see: https://www.microimages.com/documentation/TechGuides/78BingStructure.pdf
     ///
     /// Formula from:
