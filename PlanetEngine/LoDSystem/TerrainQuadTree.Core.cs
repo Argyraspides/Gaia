@@ -43,6 +43,7 @@ public sealed partial class TerrainQuadTree : Node3D
     public double WorldSizeLonKm { get; private set; }
     public int MaxDepth { get; private set; }
     public int MinDepth { get; private set; }
+    public int CurrDepth { get; private set; }
     
     public MapTileType MapTileType { get; private set; }
     
@@ -157,6 +158,7 @@ public sealed partial class TerrainQuadTree : Node3D
             throw new ArgumentException($"zoomLevel must be between {MinDepth} and {MaxDepth}");
         }
 
+        CurrDepth = zoomLevel;
         RootNodes = new List<TerrainQuadTreeNode>();
 
         int nodesPerSide = (1 << zoomLevel); // 2^z
@@ -174,14 +176,7 @@ public sealed partial class TerrainQuadTree : Node3D
             RootNodes.Add(n);
             AddChild(n);
             
-            n.Chunk.TerrainChunkLoaded += () =>
-            {
-                int currNodeCt = GetTree().GetNodesInGroup(NodeGroupName).Count;
-                if (currNodeCt == nodesInLevel)
-                {
-                    EmitQuadTreeLoaded();
-                }
-            };
+            n.Chunk.TerrainChunkLoaded += OnTerrainChunkLoaded;
             
             InitializeTerrainNode(n);
         }
@@ -189,12 +184,14 @@ public sealed partial class TerrainQuadTree : Node3D
         Start();
     }
 
-    private void EmitQuadTreeLoaded()
+    private void OnTerrainChunkLoaded()
     {
-        if (!_quadTreeLoaded)
+        int currNodeCt = GetTree().GetNodesInGroup(NodeGroupName).Count;
+        int nodesPerSide = (1 << CurrDepth);
+        int nodesInLevel = nodesPerSide * nodesPerSide;
+        if (currNodeCt == nodesInLevel)
         {
             EmitSignal(SignalName.QuadTreeLoaded);
-            _quadTreeLoaded = true;
         }
     }
 
