@@ -23,6 +23,7 @@ using System.Data;
 using System.Threading;
 using Gaia.Common.Utils.Godot;
 using Gaia.Common.Utils.Logging;
+using Gaia.InterCom.EventBus;
 using Gaia.PlanetEngine.MapTiles;
 using Gaia.PlanetEngine.MeshGenerators;
 using Gaia.PlanetEngine.Utils;
@@ -121,12 +122,7 @@ public sealed partial class TerrainQuadTree : Node3D
         WorldSizeLonKm = worldSizeLon;
 
         InitializeAltitudeThresholds();
-        QuadTreeLoaded += OnQuadTreeLoaded;
-    }
-
-    private void OnQuadTreeLoaded()
-    {
-        Logger.LogInfo($"The quadtree has successfully loaded! Current node count: {GetTree().GetNodesInGroup(NodeGroupName).Count}");
+        QuadTreeLoaded += GlobalEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
     }
 
     public override void _Process(double delta)
