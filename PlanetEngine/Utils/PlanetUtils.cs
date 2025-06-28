@@ -16,6 +16,8 @@
 
 */
 
+using Gaia.PlanetEngine.MapTiles;
+
 namespace Gaia.PlanetEngine.Utils;
 
 using System;
@@ -29,6 +31,9 @@ using Godot;
 /// We speak the language of Mathematics, and as such, all angles are in radians unless it is impossible
 /// to work with
 /// </summary>
+/// TODO:: some of these functions should be made private, and only the public functions exposed will
+/// be the giant switch cases to keep the planet utils generic. We should pass in what kind of map tile type or whatever
+/// we wish to work with to keep the rest of the codebase generic
 public static partial class PlanetUtils
 {
     public const double PI = Math.PI;
@@ -51,6 +56,29 @@ public static partial class PlanetUtils
 
     public const double RADIANS_TO_DEGREES = 180.0 / PI;
     public const double DEGREES_TO_RADIANS = PI / 180.0;
+
+    public static int LatitudeToTileCoordinate(MapTileType mapTileType, double lat, int zoom)
+    {
+        switch (mapTileType)
+        {
+            case MapTileType.WEB_MERCATOR_EARTH:
+                return LatitudeToTileCoordinateMercator(lat, zoom);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    public static int LongitudeToTileCoordinate(MapTileType mapTileType, double lon, int zoom)
+    {
+        switch (mapTileType)
+        {
+            case MapTileType.WEB_MERCATOR_EARTH:
+                return LongitudeToTileCoordinateMercator(lon, zoom);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
 
     /// <summary>
     /// Converts line of latitude (radians) to a latitude tile coordinate (y axis) on the Mercator projection,
@@ -224,6 +252,28 @@ public static partial class PlanetUtils
         return TileCoordinatesToQuadkey(lonTileCoo, latTileCoo, zoom);
     }
 
+    public static double ComputeCenterLatitude(MapTileType tileType, int latTileCoo, int zoom)
+    {
+        switch (tileType)
+        {
+            case MapTileType.WEB_MERCATOR_EARTH:
+                return ComputeCenterLatitudeWebMercator(latTileCoo, zoom);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    public static double ComputeCenterLongitude(MapTileType tileType, int latTileCoo, int zoom)
+    {
+        switch (tileType)
+        {
+            case MapTileType.WEB_MERCATOR_EARTH:
+                return ComputeCenterLongitudeWebMercator(latTileCoo, zoom);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
     /// <summary>
     /// Computes the center latitude of a tile given its row index and zoom level.
     /// </summary>
@@ -244,6 +294,28 @@ public static partial class PlanetUtils
         return westEdge + lonRange / 2;
     }
 
+    
+    public static double TileToLonRange(MapTileType tileType, int tileY, int zoom)
+    {
+        switch (tileType)
+        {
+            case MapTileType.WEB_MERCATOR_EARTH:
+                return TileToLatRangeWebMercator(tileY, zoom);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+    
+    public static double TileToLatRange(MapTileType tileType, int tileY, int zoom)
+    {
+        switch (tileType)
+        {
+            case MapTileType.WEB_MERCATOR_EARTH:
+                return TileToLonRangeWebMercator(zoom);
+            default:
+                throw new NotImplementedException();
+        }
+    }
 
     /// <summary>
     /// Returns the number of radians of latitude that a tile spans at a given tile row and zoom level.

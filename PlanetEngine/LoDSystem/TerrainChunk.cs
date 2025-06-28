@@ -76,8 +76,8 @@ public partial class TerrainChunk : Node3D
     private void ApplyTexture(Texture2D texture2D)
     {
         var standardShader = new StandardMaterial3D();
-        // standardShader.AlbedoTexture = texture2D;
-        standardShader.AlbedoColor = Colors.DarkBlue;
+        standardShader.AlbedoTexture = texture2D;
+        // standardShader.AlbedoColor = Colors.HotPink;
         if (!GodotUtils.IsValid(TerrainChunkMesh))
         {
             Logger.LogError(
@@ -90,21 +90,29 @@ public partial class TerrainChunk : Node3D
 
     private async Task InitializeTerrainChunkAsync()
     {
-        // MapTile mapTile = await MapAPI.RequestMapTileAsync(
-        //     (float)MapTile.Latitude,
-        //     (float)MapTile.Longitude,
-        //     MapTile.ZoomLevel,
-        //     MapTile.MapType,
-        //     MapTile.MapImageType,
-        //     MapTile.MapTileType
-        // );
-        //
-        // if (mapTile == null)
-        // {
-        //     throw new Exception("Failed to initialize map tile");
-        // }
+        MapTile mapTile = await MapAPI.RequestMapTileAsync(
+            (float)MapTile.Latitude,
+            (float)MapTile.Longitude,
+            MapTile.ZoomLevel,
+            MapTile.MapType,
+            MapTile.MapImageType,
+            MapTile.MapTileType
+        );
         
-        ApplyTexture(null);
+        if (mapTile == null)
+        {
+            Logger.LogError(
+                $"==========================================================================\n" +
+                $"TerrainChunk::InitializeTerrainChunkAsync() - MapTile could not be loaded!\n" +
+                $"Latitude: {MapTile.Latitude}\n" +
+                $"Longitude: {MapTile.Longitude}\n" +
+                $"Zoom: {MapTile.ZoomLevel}\n" +
+                $"MapType: {MapTile.MapType}"
+            );
+            return;
+        }
+        
+        ApplyTexture(mapTile.Texture2D);
     }
 
 }

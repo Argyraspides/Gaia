@@ -1,9 +1,23 @@
+using System;
+using Gaia.PlanetEngine.MapTiles;
 using Godot;
 
 namespace Gaia.PlanetEngine.MeshGenerators;
 
 public static partial class MeshGenerator
 {
+
+    public static MeshInstance3D GenerateMesh(MapTileType tileType)
+    {
+        switch (tileType)
+        {
+            case MapTileType.WEB_MERCATOR_EARTH:
+                // TODO:: how to handle dynamic params?
+                return GenerateWebMercatorMesh();
+            default:
+                throw new NotImplementedException();
+        }
+    }
     
     // Generates a plane mesh. Each vertex corresponds to a pixel
     // so that you can use height maps to deform the mesh to create

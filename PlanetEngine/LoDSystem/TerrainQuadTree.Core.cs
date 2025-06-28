@@ -32,9 +32,16 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public sealed partial class TerrainQuadTree : Node3D
 {
+    
+    // Size of the world this quadtree handles in the directions of latitude/longitude
+    // of said world. E.g., Earth as a globe has WorldSizeLatKm as the circumference along lines of longitude 
+    public double WorldSizeLatKm { get; private set; }
+    public double WorldSizeLonKm { get; private set; }
     public int MaxDepth { get; private set; }
     public int MinDepth { get; private set; }
-
+    
+    public MapTileType MapTileType { get; private set; }
+    
     public long MaxNodes { get; private set; }
 
     public double[] SplitThresholds { get; private set; }
@@ -66,10 +73,19 @@ public sealed partial class TerrainQuadTree : Node3D
     private const string NodeGroupName = "TerrainQuadTreeNodes";
 
     private readonly double[] m_baseAltitudeThresholds = new double[]
-    { 1000, 500, 250, 125, 100, 90, 80, 75, 70, 55, 30, 25, 15 };
+    {
+        156000.0f, 78000.0f, 39000.0f, 19500.0f, 9750.0f, 4875.0f, 2437.5f, 1218.75f, 609.375f, 304.6875f, 152.34f,
+        76.17f, 38.08f, 19.04f, 9.52f, 4.76f, 2.38f, 1.2f, 0.6f, 0.35f
+    };
 
-    public TerrainQuadTree(Camera3D camera, MapTileType tileType, int maxNodes = 1000,
-        int minDepth = 0, int maxDepth = 20)
+    public TerrainQuadTree(
+        Camera3D camera, 
+        MapTileType tileType, 
+        int maxNodes = 10000,
+        int minDepth = 0, 
+        int maxDepth = 20,
+        float worldSizeLat = PlanetUtils.EARTH_POLAR_CIRCUMFERENCE_KM,
+        float worldSizeLon = PlanetUtils.EARTH_EQUATORIAL_CIRCUMFERENCE_KM)
     {
         if (maxDepth > MAX_DEPTH_LIMIT || maxDepth < MIN_DEPTH_LIMIT)
         {
@@ -95,6 +111,9 @@ public sealed partial class TerrainQuadTree : Node3D
         MaxNodes = maxNodes;
         MinDepth = minDepth;
         MaxDepth = maxDepth;
+        MapTileType = tileType;
+        WorldSizeLatKm = worldSizeLat;
+        WorldSizeLonKm = worldSizeLon;
 
         InitializeAltitudeThresholds();
     }
@@ -137,7 +156,7 @@ public sealed partial class TerrainQuadTree : Node3D
             int latTileCoo = i / nodesPerSide;
             int lonTileCoo = i % nodesPerSide;
             
-            TerrainQuadTreeNode n = CreateNode(latTileCoo, lonTileCoo, MinDepth);
+            TerrainQuadTreeNode n = CreateNode(latTileCoo, lonTileCoo, zoomLevel);
             
             n.IsDeepestVisible = true;
             n.Name = $"TerrainQuadTreeNode_{latTileCoo}_{lonTileCoo}";
@@ -197,34 +216,50 @@ public sealed partial class TerrainQuadTree : Node3D
             Logger.LogError("TerrainQuadTree::InitializeTerrainNodeMesh: Invalid terrain node!");
             return;
         }
-        
-        // TODO:: remember quadtree should be generic so this idea of width/height and also
-        // mercator specific stuff should be completely out of the question. ONLY thing allowed is
-        // tiles
-        float worldWidth = 1000;
-        float worldHeight = 1000;
 
+        node.Chunk.MeshInstance = MeshGenerator.GenerateMesh(MapTileType);
+        node.Chunk.Load();  
+        node.AddToGroup(NodeGroupName);
+        
+        PositionTerrainNode(node);
+    }
+    
+
+    private void PositionTerrainNode(TerrainQuadTreeNode node)
+    {
+        switch (MapTileType)
+        {
+            case MapTileType.WEB_MERCATOR_EARTH:
+                PositionTerrainNodeFlat(node);
+                break;
+            case MapTileType.WEB_MERCATOR_WGS84:
+                PositionTerrainNodeGlobe(node);
+                break;
+        }
+    }
+
+    private void PositionTerrainNodeFlat(TerrainQuadTreeNode node)
+    {
         int zoomLevel = node.Chunk.MapTile.ZoomLevel;
         int tilesPerSide = (int) Math.Pow(2, zoomLevel);
         
-        float trueTileWidth = worldWidth / tilesPerSide;
-        float trueTileHeight = worldHeight / tilesPerSide;
+        double trueTileWidth = WorldSizeLonKm / tilesPerSide;
+        double trueTileHeight = WorldSizeLatKm / tilesPerSide;
         
-        int latCoo = PlanetUtils.LatitudeToTileCoordinateMercator(node.Chunk.MapTile.Latitude, zoomLevel);
-        int lonCoo = PlanetUtils.LongitudeToTileCoordinateMercator(node.Chunk.MapTile.Longitude, zoomLevel);
+        int latCoo = PlanetUtils.LatitudeToTileCoordinate(MapTileType, node.Chunk.MapTile.Latitude, zoomLevel);
+        int lonCoo = PlanetUtils.LongitudeToTileCoordinate(MapTileType, node.Chunk.MapTile.Longitude, zoomLevel);
     
-        float xCoo = (-worldWidth / 2) + (lonCoo + 0.5f) * trueTileWidth;
-        float zCoo = (worldHeight / 2) - (latCoo + 0.5f) * trueTileHeight;
+        double xCoo = (-WorldSizeLonKm / 2) + (lonCoo + 0.5f) * trueTileWidth;
+        double zCoo = -((WorldSizeLatKm / 2) - (latCoo + 0.5f) * trueTileHeight);
         
-        node.Chunk.Scale = new Vector3(trueTileWidth, 1, trueTileHeight);
-        node.GlobalPosition = new Vector3(xCoo, 0.0f, zCoo);
+        node.Chunk.Scale = new Vector3((float)trueTileWidth, 1, (float)trueTileHeight);
+        node.GlobalPosition = new Vector3((float)xCoo, 0.0f, (float)zCoo);
         node.GlobalPositionCpy = node.GlobalPosition;
+    }
 
-        // todo:: stop mercator assumption!!
-        node.Chunk.MeshInstance = MeshGenerator.GenerateWebMercatorMesh();
-        node.Chunk.Load();  
-        
-        node.AddToGroup(NodeGroupName);
+    private void PositionTerrainNodeGlobe(TerrainQuadTreeNode node)
+    {
+        throw new NotImplementedException();
     }
 
     private void InitializeAltitudeThresholds()
@@ -232,14 +267,12 @@ public sealed partial class TerrainQuadTree : Node3D
         SplitThresholds = new double[MaxDepth + 1];
         MergeThresholds = new double[MaxDepth + 2];
 
-        int it = Math.Min(MaxDepth, m_baseAltitudeThresholds.Length);
-
-        for (int zoom = 0; zoom < it; zoom++)
+        for (int zoom = 0; zoom < m_baseAltitudeThresholds.Length; zoom++)
         {
             SplitThresholds[zoom] = m_baseAltitudeThresholds[zoom];
         }
 
-        for (int zoom = 1; zoom < MaxDepth; zoom++)
+        for (int zoom = 1; zoom < m_baseAltitudeThresholds.Length; zoom++)
         {
             MergeThresholds[zoom] = SplitThresholds[zoom - 1] * MergeThresholdFactor;
         }
@@ -349,6 +382,8 @@ public sealed partial class TerrainQuadTree : Node3D
     private Vector2I GetChildTileCoordinates(int parentLatTileCoo,
         int parentLonTileCoo, int childIndex)
     {
+        // Formula for the tile coordinates of a child specifically in a quadtree structure.
+        // Latitude is along the Y axis (normal cartesian system -- not godot), and longitude the X axis
         int childLatTileCoo = parentLatTileCoo * 2 + ((childIndex == 2 || childIndex == 3) ? 1 : 0);
         int childLonTileCoo = parentLonTileCoo * 2 + ((childIndex == 1 || childIndex == 3) ? 1 : 0);
         return new Vector2I(childLonTileCoo, childLatTileCoo);
@@ -356,17 +391,17 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private TerrainQuadTreeNode CreateNode(int latTileCoo, int lonTileCoo, int zoomLevel)
     {
-        // todo:: no mercator assumptions man!~!
-        double childCenterLat = PlanetUtils.ComputeCenterLatitudeWebMercator(latTileCoo, zoomLevel);
-        double childCenterLon = PlanetUtils.ComputeCenterLongitudeWebMercator(lonTileCoo, zoomLevel);
+        double childCenterLat = PlanetUtils.ComputeCenterLatitude(MapTileType, latTileCoo, zoomLevel);
+        double childCenterLon = PlanetUtils.ComputeCenterLongitude(MapTileType, lonTileCoo, zoomLevel);
 
-        var childChunk =
-            new TerrainChunk(new MapTile(
-                        (float)childCenterLat,
-                        (float)childCenterLon,
-                        zoomLevel,
-                        MapTileType.WEB_MERCATOR_EARTH)
-            );
+        var childChunk = 
+            new TerrainChunk(
+                new MapTile(
+                    (float)childCenterLat,
+                    (float)childCenterLon,
+                    zoomLevel,
+                    MapTileType)
+                );
         childChunk.SetName("TerrainChunk");
         
         var terrainQuadTreeNode = new TerrainQuadTreeNode(childChunk, zoomLevel);

@@ -31,7 +31,7 @@ public class MapTile : GaiaResource
     // will show up, hence a map tile must have a language field
     public HumanLanguage Language { get; protected set; } = HumanLanguage.en;
 
-    public MapTileType MapTileType { get; protected set; } = MapTileType.WEB_MERCATOR_WGS84;
+    public MapTileType MapTileType { get; protected set; } = MapTileType.WEB_MERCATOR_EARTH;
 
     public MapTile()
     {
@@ -42,21 +42,15 @@ public class MapTile : GaiaResource
         // Default zoom level for city-scale viewing
         ZoomLevel = 12;
 
-        // Automatically determine tile coordinate, latitude/longitude range
-        LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(Latitude, ZoomLevel);
-        LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(Longitude, ZoomLevel);
-
-        LatitudeRange = PlanetUtils.TileToLatRangeWebMercator(LatitudeTileCoo, ZoomLevel);
-        LongitudeRange = PlanetUtils.TileToLonRangeWebMercator(ZoomLevel);
-
         AutoDetermineFields(Latitude, Longitude, ZoomLevel);
     }
 
-    public MapTile(double latitude, double longitude, int zoomLevel, MapTileType tileType = MapTileType.WEB_MERCATOR_WGS84)
+    public MapTile(double latitude, double longitude, int zoomLevel, MapTileType tileType = MapTileType.WEB_MERCATOR_EARTH)
     {
         Latitude = latitude;
         Longitude = longitude;
         ZoomLevel = zoomLevel;
+        MapTileType = tileType;
 
         AutoDetermineFields(Latitude, Longitude, ZoomLevel);
     }
@@ -64,11 +58,10 @@ public class MapTile : GaiaResource
     private void AutoDetermineFields(double latitude, double longitude, int zoomLevel)
     {
         // Automatically determine tile coordinate, latitude/longitude range
-        // TODO:: again with this BS you're doing mercator assumptions again stop this shit
-        LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(latitude, zoomLevel);
-        LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(longitude, zoomLevel);
-        LatitudeRange = PlanetUtils.TileToLatRangeWebMercator(LatitudeTileCoo, zoomLevel);
-        LongitudeRange = PlanetUtils.TileToLonRangeWebMercator(zoomLevel);
+        LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinate(MapTileType, latitude, zoomLevel);
+        LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinate(MapTileType, longitude, zoomLevel);
+        LatitudeRange = PlanetUtils.TileToLatRange(MapTileType, LatitudeTileCoo, zoomLevel);
+        LongitudeRange = PlanetUtils.TileToLonRange(MapTileType, LongitudeTileCoo, zoomLevel);
     }
 
     public override bool IsHashable()

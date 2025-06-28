@@ -5,6 +5,9 @@ using Gaia.PlanetEngine.MapTiles;
 
 public partial class Earth : Node3D
 {
+
+    [Export] private bool wireFrameActive = false;
+    
     private TerrainQuadTree m_terrainQuadTree;
     private Camera3D m_camera;
     private MapTileType m_mapTileType;
@@ -18,14 +21,23 @@ public partial class Earth : Node3D
         m_mapTileType = tileType;  
     }
 
+    public override void _Process(double delta)
+    {
+        base._Process(delta);
+        
+        RenderingServer.SetDebugGenerateWireframes(wireFrameActive);
+        GetViewport().SetDebugDraw(
+            wireFrameActive ? 
+                Viewport.DebugDrawEnum.Wireframe : Viewport.DebugDrawEnum.Disabled );
+    }
+
     public override void _Ready()
     {
-        RenderingServer.SetDebugGenerateWireframes(true);
-        GetViewport().SetDebugDraw(Viewport.DebugDrawEnum.Wireframe);
+
         base._Ready();
         m_terrainQuadTree = new TerrainQuadTree(m_camera, m_mapTileType);
         m_terrainQuadTree.Name = "EarthTerrainQuadTree";
         AddChild(m_terrainQuadTree);
-        m_terrainQuadTree.InitializeQuadTree(0);
+        m_terrainQuadTree.InitializeQuadTree(6);
     }
 }
