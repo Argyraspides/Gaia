@@ -291,6 +291,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
         for (int zoom = 0; zoom < m_baseAltitudeThresholds.Length; zoom++)
         {
+            m_baseAltitudeThresholds[zoom] /= 2;
             SplitThresholds[zoom] = m_baseAltitudeThresholds[zoom];
         }
 

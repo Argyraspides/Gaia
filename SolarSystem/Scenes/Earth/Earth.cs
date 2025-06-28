@@ -35,6 +35,6 @@ public partial class Earth : Node3D
         m_terrainQuadTree = new TerrainQuadTree(m_camera, m_mapTileType);
         m_terrainQuadTree.Name = "EarthTerrainQuadTree";
         AddChild(m_terrainQuadTree);
-        m_terrainQuadTree.InitializeQuadTree(6);
+        m_terrainQuadTree.InitializeQuadTree(1);
     }
 }

@@ -12,7 +12,7 @@ public static class Logger
 
     public static void RegisterLogging<T>(this T obj, bool enabled)
     {
-        _registeredClasses.Add(typeof(T).Name, enabled);
+        _registeredClasses.TryAdd(typeof(T).Name, enabled);
     }
 
     public static void DisableLogging<T>(this T obj)

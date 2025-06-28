@@ -24,7 +24,7 @@ light_energy = 100000.0
 omni_range = 200000.0
 
 [node name="MainCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 3000, 0)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 50000, 0)
 far = 50000.0
 script = ExtResource("3_jbp3p")
 m_moveSpeed = 100.0
