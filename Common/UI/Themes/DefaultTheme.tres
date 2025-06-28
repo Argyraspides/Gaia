@@ -1,6 +1,6 @@
 [gd_resource type="Theme" load_steps=6 format=3 uid="uid://dll7gj5amwt4g"]
 
-[ext_resource type="FontFile" uid="uid://d0uk35ukjlilv" path="res://Core/UI/Fonts/Jura/Jura-Regular.ttf" id="1_xjlxu"]
+[ext_resource type="FontFile" uid="uid://r4alo7kybwp8" path="res://Common/UI/Fonts/Jura/Jura-Regular.ttf" id="1_xjlxu"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_x3ms7"]
 

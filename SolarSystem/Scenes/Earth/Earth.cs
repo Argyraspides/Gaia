@@ -33,7 +33,6 @@ public partial class Earth : Node3D
 
     public override void _Ready()
     {
-
         base._Ready();
         m_terrainQuadTree = new TerrainQuadTree(m_camera, m_mapTileType);
         m_terrainQuadTree.Name = "EarthTerrainQuadTree";

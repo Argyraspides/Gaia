@@ -8,7 +8,7 @@ public static partial class Logger
     private static bool m_infoLoggingEnabled = true;
     private static bool m_warningLoggingEnabled = true;
     private static bool m_initializationLoggingEnabled = true;
-    private static bool m_errorLoggingEnabled = true;
+    private static bool m_errorLoggingEnabled = false;
     private static bool m_successLoggingEnabled = true;
     private static bool m_bullshitLoggingEnabled = false;
     private static bool m_godotLoggingEnabled = false;
