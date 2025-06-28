@@ -27,11 +27,10 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public partial class TerrainQuadTree
 {
-
     private ManualResetEventSlim CanPerformSearch = new ManualResetEventSlim(false);
 
     private Thread SplitOrMergeSearchThread;
-    
+
     private volatile bool m_isRunning;
 
     private const int THREAD_JOIN_TIMEOUT_MS = 1000;
@@ -43,7 +42,6 @@ public partial class TerrainQuadTree
             CanPerformSearch.Wait();
             try
             {
-
                 foreach (var rootNode in RootNodes)
                 {
                     DetermineSplitMergeNodes(rootNode, null);
@@ -87,10 +85,10 @@ public partial class TerrainQuadTree
     {
         if (!GodotUtils.IsValid(node)) return false;
         if (node.Depth >= MaxDepth) return false;
-        
+
         float distanceToCamera = node.GlobalPositionCpy.DistanceTo(CameraPosition);
         bool shouldSplit = SplitThresholds[node.Depth] > distanceToCamera;
-        
+
         return shouldSplit;
     }
 
@@ -100,10 +98,10 @@ public partial class TerrainQuadTree
         if (!GodotUtils.IsValid(node)) return false;
         if (node.Depth < MinDepth) return false;
         if (!node.IsDeepestVisible) return false;
-        
+
         float distanceToCamera = node.GlobalPositionCpy.DistanceTo(CameraPosition);
         bool shouldMerge = MergeThresholds[node.Depth] < distanceToCamera;
-        
+
         return shouldMerge;
     }
 
@@ -122,5 +120,4 @@ public partial class TerrainQuadTree
 
         return true;
     }
-
 }

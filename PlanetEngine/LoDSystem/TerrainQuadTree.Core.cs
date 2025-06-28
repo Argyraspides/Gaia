@@ -33,11 +33,11 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public sealed partial class TerrainQuadTree : Node3D
 {
-    
     [Signal]
     public delegate void QuadTreeLoadedEventHandler();
-    private bool _quadTreeLoaded = false; 
-    
+
+    private bool _quadTreeLoaded = false;
+
     // Size of the world this quadtree handles in the directions of latitude/longitude
     // of said world. E.g., Earth as a globe has WorldSizeLatKm as the circumference along lines of longitude 
     public double WorldSizeLatKm { get; private set; }
@@ -45,14 +45,14 @@ public sealed partial class TerrainQuadTree : Node3D
     public int MaxDepth { get; private set; }
     public int MinDepth { get; private set; }
     public int CurrDepth { get; private set; }
-    
+
     public MapTileType MapTileType { get; private set; }
-    
+
     public long MaxNodes { get; private set; }
 
     public double[] SplitThresholds { get; private set; }
     public double[] MergeThresholds { get; private set; }
-    
+
     private ManualResetEventSlim CanUpdateQuadTree = new ManualResetEventSlim(false);
 
     public List<TerrainQuadTreeNode> RootNodes { get; private set; }
@@ -75,9 +75,9 @@ public sealed partial class TerrainQuadTree : Node3D
 
     private const int MAX_DEPTH_LIMIT = 23;
     private const int MIN_DEPTH_LIMIT = 1;
-    
+
     private const string NodeGroupName = "TerrainQuadTreeNodes";
-    
+
     private readonly double[] m_baseAltitudeThresholds = new double[]
     {
         156000.0f, 78000.0f, 39000.0f, 19500.0f, 9750.0f, 4875.0f, 2437.5f, 1218.75f, 609.375f, 304.6875f, 152.34f,
@@ -123,6 +123,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
         InitializeAltitudeThresholds();
         QuadTreeLoaded += GlobalEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
+        this.RegisterLogging(true);
     }
 
     public override void _Process(double delta)
@@ -163,17 +164,17 @@ public sealed partial class TerrainQuadTree : Node3D
         {
             int latTileCoo = i / nodesPerSide;
             int lonTileCoo = i % nodesPerSide;
-            
+
             TerrainQuadTreeNode n = CreateNode(latTileCoo, lonTileCoo, zoomLevel);
-            
+
             n.IsDeepestVisible = true;
             n.Name = $"TerrainQuadTreeNode_{latTileCoo}_{lonTileCoo}";
 
             RootNodes.Add(n);
             AddChild(n);
-            
+
             n.Chunk.TerrainChunkLoaded += OnTerrainChunkLoaded;
-            
+
             InitializeTerrainNode(n);
         }
 
@@ -225,7 +226,7 @@ public sealed partial class TerrainQuadTree : Node3D
         CanPerformCulling.Dispose();
         CanPerformSearch.Dispose();
     }
-    
+
     ~TerrainQuadTree()
     {
         Stop();
@@ -235,14 +236,14 @@ public sealed partial class TerrainQuadTree : Node3D
     {
         if (!GodotUtils.IsValid(node))
         {
-            Logger.LogError("TerrainQuadTree::InitializeTerrainNodeMesh: Invalid terrain node!");
+            this.LogError("TerrainQuadTree::InitializeTerrainNodeMesh: Invalid terrain node!");
             return;
         }
-        
+
         node.Chunk.MeshInstance = MeshGenerator.GenerateMesh(MapTileType);
         node.AddToGroup(NodeGroupName);
         node.Chunk.Load();
-        
+
         PositionTerrainNode(node);
     }
 
@@ -262,17 +263,17 @@ public sealed partial class TerrainQuadTree : Node3D
     private void PositionTerrainNodeFlat(TerrainQuadTreeNode node)
     {
         int zoomLevel = node.Chunk.MapTile.ZoomLevel;
-        int tilesPerSide = (int) Math.Pow(2, zoomLevel);
-        
+        int tilesPerSide = (int)Math.Pow(2, zoomLevel);
+
         double trueTileWidth = WorldSizeLonKm / tilesPerSide;
         double trueTileHeight = WorldSizeLatKm / tilesPerSide;
-        
+
         int latCoo = PlanetUtils.LatitudeToTileCoordinate(MapTileType, node.Chunk.MapTile.Latitude, zoomLevel);
         int lonCoo = PlanetUtils.LongitudeToTileCoordinate(MapTileType, node.Chunk.MapTile.Longitude, zoomLevel);
-    
+
         double xCoo = (-WorldSizeLonKm / 2) + (lonCoo + 0.5f) * trueTileWidth;
         double zCoo = -((WorldSizeLatKm / 2) - (latCoo + 0.5f) * trueTileHeight);
-        
+
         node.Chunk.Scale = new Vector3((float)trueTileWidth, 1, (float)trueTileHeight);
         node.GlobalPosition = new Vector3((float)xCoo, 0.0f, (float)zCoo);
         node.GlobalPositionCpy = node.GlobalPosition;
@@ -394,7 +395,8 @@ public sealed partial class TerrainQuadTree : Node3D
         {
             Vector2I childCoos = GetChildTileCoordinates(parentLatTileCoo, parentLonTileCoo, i);
             TerrainQuadTreeNode newNode = CreateNode(childCoos.Y, childCoos.X, childZoomLevel);
-            newNode.Name = $"TerrainQuadTreeNode_{newNode.Chunk.MapTile.LatitudeTileCoo}_{newNode.Chunk.MapTile.LongitudeTileCoo}";
+            newNode.Name =
+                $"TerrainQuadTreeNode_{newNode.Chunk.MapTile.LatitudeTileCoo}_{newNode.Chunk.MapTile.LongitudeTileCoo}";
             parentNode.ChildNodes[i] = newNode;
             parentNode.AddChild(newNode);
         }
@@ -415,20 +417,20 @@ public sealed partial class TerrainQuadTree : Node3D
         double childCenterLat = PlanetUtils.ComputeCenterLatitude(MapTileType, latTileCoo, zoomLevel);
         double childCenterLon = PlanetUtils.ComputeCenterLongitude(MapTileType, lonTileCoo, zoomLevel);
 
-        var childChunk = 
+        var childChunk =
             new TerrainChunk(
                 new MapTile(
                     (float)childCenterLat,
                     (float)childCenterLon,
                     zoomLevel,
                     MapTileType)
-                );
+            );
         childChunk.SetName("TerrainChunk");
-        
+
         var terrainQuadTreeNode = new TerrainQuadTreeNode(childChunk, zoomLevel);
-        
+
         terrainQuadTreeNode.SetName("TerrainQuadTreeNode");
-        
+
         return terrainQuadTreeNode;
     }
 }

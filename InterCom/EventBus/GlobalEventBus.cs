@@ -1,3 +1,4 @@
+using Gaia.Common.Utils.Logging;
 using Godot;
 
 namespace Gaia.InterCom.EventBus;
@@ -20,6 +21,7 @@ public partial class GlobalEventBus : Node
     public override void _Ready()
     {
         Instance = this;
+        this.RegisterLogging(true);
 
         PlanetaryEventBus = new PlanetaryEventBus();
         PlanetaryEventBus.Name = "PlanetaryEventBus";

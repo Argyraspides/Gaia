@@ -27,11 +27,11 @@ public static partial class PlanetUtils
     // using the WGS84 ellipsoid standard
     public const float EARTH_EQUATORIAL_RADIUS_M = 6_378_137;
     public const float EARTH_EQUATORIAL_RADIUS_KM = 6_378.137f;
-    
-    
+
+
     public const float EARTH_POLAR_CIRCUMFERENCE_M = 40_007_863f;
     public const float EARTH_POLAR_CIRCUMFERENCE_KM = 40_007.863f;
-    
+
     public const float EARTH_EQUATORIAL_CIRCUMFERENCE_M = 40_075_017f;
     public const float EARTH_EQUATORIAL_CIRCUMFERENCE_KM = 40_075.017f;
 

@@ -1,121 +1,205 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Godot;
 
 namespace Gaia.Common.Utils.Logging;
-
-public static partial class Logger
+public static class Logger
 {
-    private static bool m_infoLoggingEnabled = true;
-    private static bool m_warningLoggingEnabled = true;
-    private static bool m_initializationLoggingEnabled = true;
-    private static bool m_errorLoggingEnabled = false;
-    private static bool m_successLoggingEnabled = true;
-    private static bool m_bullshitLoggingEnabled = false;
-    private static bool m_godotLoggingEnabled = false;
-    
-    public static void LogBullshit(string message)
+    // Class name -> logging enabled/disabled
+    private static Dictionary<string, bool> _registeredClasses = new Dictionary<string, bool>();
+    private static bool _godotLoggingEnabled = false;
+
+    public static void RegisterLogging<T>(this T obj, bool enabled)
     {
-        if (!m_bullshitLoggingEnabled) return;
-        
+        _registeredClasses.Add(typeof(T).Name, enabled);
+    }
+
+    public static void DisableLogging<T>(this T obj)
+    {
+        if (!_registeredClasses.ContainsKey(typeof(T).Name))
+        {
+            return;
+        }
+        _registeredClasses[typeof(T).Name] = false;
+    }
+    
+    public static void EnableLogging<T>(this T obj)
+    {
+        if (!_registeredClasses.ContainsKey(typeof(T).Name))
+        {
+            return;
+        }
+        _registeredClasses[typeof(T).Name] = false;
+    }
+
+    [Conditional("ENABLE_LOGGING")]
+    public static void LogBullshit<T>(this T obj, string message)
+    {
+        if (!_registeredClasses.ContainsKey(typeof(T).Name))
+        {
+            return;
+        }
+
+        if (!_registeredClasses[typeof(T).Name])
+        {
+            return;
+        }
+
+        if (!_registeredClasses.ContainsKey(typeof(T).Name))
+        {
+            return;
+        }
+
+        if (!_registeredClasses[typeof(T).Name])
+        {
+            return;
+        }
+
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         string fullMessage = $"{timestamp} {message}";
-        
+
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.Write($"{timestamp} ");
         Console.WriteLine(message);
         Console.ResetColor();
-        
-        if (m_godotLoggingEnabled)
+
+        if (_godotLoggingEnabled)
         {
             GD.PrintRich($"[color=cyan]{fullMessage}[/color]");
         }
     }
 
-    public static void LogSuccess(string message)
+    [Conditional("ENABLE_LOGGING")]
+    public static void LogSuccess<T>(this T obj, string message)
     {
-        if (!m_successLoggingEnabled) return;
-        
+        if (!_registeredClasses.ContainsKey(typeof(T).Name))
+        {
+            return;
+        }
+
+        if (!_registeredClasses[typeof(T).Name])
+        {
+            return;
+        }
+
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         string fullMessage = $"{timestamp} {message}";
-        
+
         Console.ForegroundColor = ConsoleColor.Green;
         Console.Write($"{timestamp} ");
         Console.WriteLine(message);
         Console.ResetColor();
-        
-        if (m_godotLoggingEnabled)
+
+        if (_godotLoggingEnabled)
         {
             GD.PrintRich($"[color=green]{fullMessage}[/color]");
         }
     }
 
-    public static void LogInfo(string message)
+    [Conditional("ENABLE_LOGGING")]
+    public static void LogInfo<T>(this T obj, string message)
     {
-        if (!m_infoLoggingEnabled) return;
-        
+        if (!_registeredClasses.ContainsKey(typeof(T).Name))
+        {
+            return;
+        }
+
+        if (!_registeredClasses[typeof(T).Name])
+        {
+            return;
+        }
+
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         string fullMessage = $"{timestamp} {message}";
-        
+
         Console.ForegroundColor = ConsoleColor.Blue;
         Console.Write($"{timestamp} ");
         Console.WriteLine(message);
         Console.ResetColor();
-        
-        if (m_godotLoggingEnabled)
+
+        if (_godotLoggingEnabled)
         {
             GD.PrintRich($"[color=blue]{fullMessage}[/color]");
         }
     }
 
-    public static void LogInitialization(string message)
+    [Conditional("ENABLE_LOGGING")]
+    public static void LogInitialization<T>(this T obj, string message)
     {
-        if (!m_initializationLoggingEnabled) return;
-        
+        if (!_registeredClasses.ContainsKey(typeof(T).Name))
+        {
+            return;
+        }
+
+        if (!_registeredClasses[typeof(T).Name])
+        {
+            return;
+        }
+
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         string fullMessage = $"{timestamp} {message}";
-        
+
         Console.ForegroundColor = ConsoleColor.DarkMagenta;
         Console.Write($"{timestamp} ");
         Console.WriteLine(message);
         Console.ResetColor();
-        
-        if (m_godotLoggingEnabled)
+
+        if (_godotLoggingEnabled)
         {
             GD.PrintRich($"[color=purple]{fullMessage}[/color]");
         }
     }
 
-    public static void LogWarning(string message)
+    [Conditional("ENABLE_LOGGING")]
+    public static void LogWarning<T>(this T obj, string message)
     {
-        if (!m_warningLoggingEnabled) return;
-        
+        if (!_registeredClasses.ContainsKey(typeof(T).Name))
+        {
+            return;
+        }
+
+        if (!_registeredClasses[typeof(T).Name])
+        {
+            return;
+        }
+
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         string fullMessage = $"{timestamp} {message}";
-        
+
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.Write($"{timestamp} ");
         Console.WriteLine(message);
         Console.ResetColor();
-        
-        if (m_godotLoggingEnabled)
+
+        if (_godotLoggingEnabled)
         {
             GD.PrintRich($"[color=yellow]{fullMessage}[/color]");
         }
     }
 
-    public static void LogError(string message)
+    [Conditional("ENABLE_LOGGING")]
+    public static void LogError<T>(this T obj, string message)
     {
-        if (!m_errorLoggingEnabled) return;
-        
+        if (!_registeredClasses.ContainsKey(typeof(T).Name))
+        {
+            return;
+        }
+
+        if (!_registeredClasses[typeof(T).Name])
+        {
+            return;
+        }
+
         string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         string fullMessage = $"{timestamp} {message}";
-        
+
         Console.ForegroundColor = ConsoleColor.Red;
         Console.Write($"{timestamp} ");
         Console.WriteLine(message);
         Console.ResetColor();
-        
-        if (m_godotLoggingEnabled)
+
+        if (_godotLoggingEnabled)
         {
             GD.PrintRich($"[color=red]{fullMessage}[/color]");
         }

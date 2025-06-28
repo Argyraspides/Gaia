@@ -5,13 +5,12 @@ public partial class MainCamera : Camera3D
 {
     private float m_pitch = 0f;
     private float m_pitchSpeed = 0.001f;
-    
+
     private float m_yaw = 0f;
     private float m_yawSpeed = 0.001f;
 
-    [Export]
-    private float m_moveSpeed = 5.0f;
-    
+    [Export] private float m_moveSpeed = 5.0f;
+
     public override void _Input(InputEvent @event)
     {
         // base._Input(@event);
@@ -36,25 +35,27 @@ public partial class MainCamera : Camera3D
         // Transform = transform;
 
         RotateObjectLocal(Vector3.Up, m_yaw);
-        RotateObjectLocal(Vector3.Right, m_pitch); 
+        RotateObjectLocal(Vector3.Right, m_pitch);
     }
 
     void ProcessMoveAround()
     {
-        
         // WASD
         if (Input.IsActionPressed("ui_forward"))
         {
             Transform = Transform.Translated(Vector3.Forward * m_moveSpeed);
         }
+
         if (Input.IsActionPressed("ui_backward"))
         {
             Transform = Transform.Translated(Vector3.Back * m_moveSpeed);
         }
+
         if (Input.IsActionPressed("ui_left"))
         {
             Transform = Transform.Translated(Vector3.Left * m_moveSpeed);
         }
+
         if (Input.IsActionPressed("ui_right"))
         {
             Transform = Transform.Translated(Vector3.Right * m_moveSpeed);
@@ -65,12 +66,11 @@ public partial class MainCamera : Camera3D
         {
             Transform = Transform.Translated(Vector3.Down * m_moveSpeed);
         }
-        
+
         // Space
         if (Input.IsActionPressed("ui_up"))
         {
             Transform = Transform.Translated(Vector3.Up * m_moveSpeed);
         }
-
     }
 }

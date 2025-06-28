@@ -294,7 +294,7 @@ public static partial class PlanetUtils
         return westEdge + lonRange / 2;
     }
 
-    
+
     public static double TileToLonRange(MapTileType tileType, int tileY, int zoom)
     {
         switch (tileType)
@@ -305,7 +305,7 @@ public static partial class PlanetUtils
                 throw new NotImplementedException();
         }
     }
-    
+
     public static double TileToLatRange(MapTileType tileType, int tileY, int zoom)
     {
         switch (tileType)
@@ -585,7 +585,7 @@ public static partial class PlanetUtils
 
         return new Vector2((float)x, (float)y);
     }
-    
+
     public static Vector2 LatLonToCartesianWebMercatorNormalized(double lat, double lon)
     {
         if (lat < MIN_LATITUDE_LEVEL_WEB_MERCATOR || lat > MAX_LATITUDE_LEVEL_WEB_MERCATOR)

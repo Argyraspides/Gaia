@@ -5,9 +5,8 @@ using Gaia.PlanetEngine.MapTiles;
 
 public partial class Earth : Node3D
 {
-
     [Export] private bool wireFrameActive = false;
-    
+
     private TerrainQuadTree m_terrainQuadTree;
     private Camera3D m_camera;
     private MapTileType m_mapTileType;
@@ -18,17 +17,16 @@ public partial class Earth : Node3D
         // todo:: code smell ... why tf does the earth need a camera? This should be an exception in the
         // terrain quad tree...
         m_camera = camera ?? throw new NullReferenceException("Camera not set!");
-        m_mapTileType = tileType;  
+        m_mapTileType = tileType;
     }
 
     public override void _Process(double delta)
     {
         base._Process(delta);
-        
+
         RenderingServer.SetDebugGenerateWireframes(wireFrameActive);
         GetViewport().SetDebugDraw(
-            wireFrameActive ? 
-                Viewport.DebugDrawEnum.Wireframe : Viewport.DebugDrawEnum.Disabled );
+            wireFrameActive ? Viewport.DebugDrawEnum.Wireframe : Viewport.DebugDrawEnum.Disabled);
     }
 
     public override void _Ready()

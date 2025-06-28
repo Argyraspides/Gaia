@@ -45,7 +45,8 @@ public class MapTile : GaiaResource
         AutoDetermineFields(Latitude, Longitude, ZoomLevel);
     }
 
-    public MapTile(double latitude, double longitude, int zoomLevel, MapTileType tileType = MapTileType.WEB_MERCATOR_EARTH)
+    public MapTile(double latitude, double longitude, int zoomLevel,
+        MapTileType tileType = MapTileType.WEB_MERCATOR_EARTH)
     {
         Latitude = latitude;
         Longitude = longitude;

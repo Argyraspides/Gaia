@@ -8,7 +8,6 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public partial class TerrainQuadTree
 {
-    
     private ManualResetEventSlim CanPerformCulling = new ManualResetEventSlim(false);
     private Thread CullThread;
 
@@ -19,11 +18,10 @@ public partial class TerrainQuadTree
             CanPerformCulling.Wait();
             try
             {
-
                 foreach (var rootNode in RootNodes)
                 {
                     if (!ExceedsMaxNodeThreshold()) break;
-                   CullUnusedNodes(rootNode);
+                    CullUnusedNodes(rootNode);
                 }
 
                 CanPerformCulling.Reset();
@@ -31,11 +29,11 @@ public partial class TerrainQuadTree
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Error in quadtree update thread: {ex}");
+                this.LogError($"Error in quadtree update thread: {ex}");
             }
         }
     }
-    
+
     private void CullUnusedNodes(TerrainQuadTreeNode parentNode)
     {
         if (!GodotUtils.IsValid(parentNode)) return;
@@ -57,7 +55,7 @@ public partial class TerrainQuadTree
     {
         return false;
     }
-    
+
     private void RemoveQuadTreeNode(TerrainQuadTreeNode node)
     {
         if (GodotUtils.IsValid(node))
@@ -65,7 +63,7 @@ public partial class TerrainQuadTree
             node.CallDeferred("queue_free");
         }
     }
-    
+
     private bool ExceedsMaxNodeThreshold()
     {
         return GetTree().GetNodesInGroup(NodeGroupName).Count >
@@ -76,7 +74,7 @@ public partial class TerrainQuadTree
     private void RemoveSubQuadTreeThreadSafe(TerrainQuadTreeNode parent)
     {
         if (!GodotUtils.IsValid(parent)) return;
-        
+
         foreach (var childNode in parent.ChildNodes)
         {
             RemoveQuadTreeNode(childNode);

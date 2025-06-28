@@ -38,7 +38,7 @@ public partial class TerrainChunk : Node3D
 {
     [Signal]
     public delegate void TerrainChunkLoadedEventHandler();
-    
+
     public MapTile MapTile { get; private set; }
 
     public MeshInstance3D TerrainChunkMesh { get; private set; }
@@ -51,7 +51,7 @@ public partial class TerrainChunk : Node3D
         get => TerrainChunkMesh;
         set => TerrainChunkMesh = value;
     }
-    
+
     public TerrainChunk(MapTile mapTile)
     {
         if (mapTile == null)
@@ -60,7 +60,7 @@ public partial class TerrainChunk : Node3D
         }
 
         MapTile = mapTile;
-
+        this.RegisterLogging(true);
     }
 
     public async void Load()
@@ -72,7 +72,7 @@ public partial class TerrainChunk : Node3D
         }
         else
         {
-            Logger.LogError("TerrainChunk::Load() - TerrainChunkMesh is not a valid MeshInstance3D");
+            this.LogError("TerrainChunk::Load() - TerrainChunkMesh is not a valid MeshInstance3D");
         }
     }
 
@@ -82,7 +82,7 @@ public partial class TerrainChunk : Node3D
         standardShader.AlbedoTexture = texture2D;
         if (!GodotUtils.IsValid(TerrainChunkMesh))
         {
-            Logger.LogError(
+            this.LogError(
                 "TerrainChunk::ApplyTexture: TerrainChunk texture could not be loaded! The TerrainChunkMesh is invalid!");
             return;
         }
@@ -101,10 +101,10 @@ public partial class TerrainChunk : Node3D
             MapTile.MapImageType,
             MapTile.MapTileType
         );
-        
+
         if (mapTile == null)
         {
-            Logger.LogError(
+            this.LogError(
                 $"==========================================================================\n" +
                 $"TerrainChunk::InitializeTerrainChunkAsync() - MapTile could not be loaded!\n" +
                 $"Latitude: {MapTile.Latitude}\n" +
@@ -114,8 +114,7 @@ public partial class TerrainChunk : Node3D
             );
             return;
         }
-        
+
         ApplyTexture(mapTile.Texture2D);
     }
-
 }

@@ -2,18 +2,19 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <EnableDynamicLoading>true</EnableDynamicLoading>
+        <DefineConstants>ENABLE_LOGGING</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
-      <Content Include="Common\UI\Fonts\Equinox\Equinox Bold.otf" />
-      <Content Include="Common\UI\Fonts\Equinox\Equinox Regular.otf" />
-      <Content Include="Common\UI\Fonts\Jura\Jura-Bold.ttf" />
-      <Content Include="Common\UI\Fonts\Jura\Jura-Light.ttf" />
-      <Content Include="Common\UI\Fonts\Jura\Jura-Medium.ttf" />
-      <Content Include="Common\UI\Fonts\Jura\Jura-Regular.ttf" />
-      <Content Include="Common\UI\Fonts\Jura\Jura-SemiBold.ttf" />
-      <Content Include="Common\UI\Themes\DefaultTheme.tres" />
+        <Content Include="Common\UI\Fonts\Equinox\Equinox Bold.otf"/>
+        <Content Include="Common\UI\Fonts\Equinox\Equinox Regular.otf"/>
+        <Content Include="Common\UI\Fonts\Jura\Jura-Bold.ttf"/>
+        <Content Include="Common\UI\Fonts\Jura\Jura-Light.ttf"/>
+        <Content Include="Common\UI\Fonts\Jura\Jura-Medium.ttf"/>
+        <Content Include="Common\UI\Fonts\Jura\Jura-Regular.ttf"/>
+        <Content Include="Common\UI\Fonts\Jura\Jura-SemiBold.ttf"/>
+        <Content Include="Common\UI\Themes\DefaultTheme.tres"/>
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="InterCom\" />
+        <Folder Include="InterCom\"/>
     </ItemGroup>
 </Project>
