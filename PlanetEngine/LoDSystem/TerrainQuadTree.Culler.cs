@@ -12,12 +12,12 @@ public partial class TerrainQuadTree
 
   private void StartCulling()
   {
-    while (m_isRunning)
+    while (_isRunning)
     {
       CanPerformCulling.Wait();
       try
       {
-        foreach (TerrainQuadTreeNode rootNode in RootNodes)
+        foreach (TerrainQuadTreeNode rootNode in _rootNodes)
         {
           if (!ExceedsMaxNodeThreshold())
           {
@@ -28,7 +28,7 @@ public partial class TerrainQuadTree
         }
 
         CanPerformCulling.Reset();
-        CanPerformSearch.Set();
+        _canPerformSearch.Set();
       }
       catch (Exception ex)
       {
@@ -70,8 +70,8 @@ public partial class TerrainQuadTree
   private bool ExceedsMaxNodeThreshold()
   {
     return GetTree().GetNodesInGroup(_nodeGroupName).Count >
-           MaxNodes *
-           MaxNodesCleanupThresholdPercent;
+           _maxNodes *
+           _maxNodesCleanupThresholdPercent;
   }
 
   private void RemoveSubQuadTreeThreadSafe(TerrainQuadTreeNode parent)

@@ -22,30 +22,30 @@ using Gaia.Common.Utils.Godot;
 using Godot;
 
 namespace Gaia.PlanetEngine.LoDSystem;
-
+// TODO:: lod camera should be owned by LOD system.
 public partial class TerrainQuadTree
 {
-  private const int THREAD_JOIN_TIMEOUT_MS = 1000;
-  private readonly ManualResetEventSlim CanPerformSearch = new(false);
+  private const int _threadJoinTimeoutMs = 1000;
+  private readonly ManualResetEventSlim _canPerformSearch = new(false);
 
-  private volatile bool m_isRunning;
+  private volatile bool _isRunning;
 
-  private Thread SplitOrMergeSearchThread;
+  private Thread _splitOrMergeSearchThread;
 
   private void DetermineSplitOrMerge()
   {
-    while (m_isRunning)
+    while (_isRunning)
     {
-      CanPerformSearch.Wait();
+      _canPerformSearch.Wait();
       try
       {
-        foreach (TerrainQuadTreeNode rootNode in RootNodes)
+        foreach (TerrainQuadTreeNode rootNode in _rootNodes)
         {
           DetermineSplitMergeNodes(rootNode, null);
         }
 
         _canUpdateQuadTree.Set();
-        CanPerformSearch.Reset();
+        _canPerformSearch.Reset();
       }
       catch (Exception ex)
       {
@@ -64,7 +64,7 @@ public partial class TerrainQuadTree
     // Splitting happens top-down, so we do it first prior to recursing down further
     if (node.IsDeepestVisible && ShouldSplit(node))
     {
-      SplitQueueNodes.Enqueue(node);
+      _splitQueueNodes.Enqueue(node);
       return;
     }
 
@@ -76,7 +76,7 @@ public partial class TerrainQuadTree
     // Merging happens bottom-up, so we do it after recursing down the tree
     if (ShouldMergeChildren(node))
     {
-      MergeQueueNodes.Enqueue(node);
+      _mergeQueueNodes.Enqueue(node);
     }
   }
 
@@ -88,13 +88,20 @@ public partial class TerrainQuadTree
       return false;
     }
 
-    if (node.Depth >= MaxDepth)
+    if (node.Depth >= _maxDepth)
     {
       return false;
     }
 
-    float distanceToCamera = node.GlobalPositionCpy.DistanceTo(CameraPosition);
-    bool shouldSplit = SplitThresholds[node.Depth] > distanceToCamera;
+    float distanceToCamera = node.GlobalPositionCpy.DistanceTo(_cameraPosition);
+    bool shouldSplit = _splitThresholds[node.Depth] > distanceToCamera;
+
+    // TODO:: should this be done here??? Awkward spot to update camera info ...
+    if (shouldSplit)
+    {
+      _lodCamera.MaxVisibleDepth = node.Depth + 1;
+      _lodCamera.Altitude = Math.Min(_lodCamera.Altitude, distanceToCamera);
+    }
 
     return shouldSplit;
   }
@@ -107,7 +114,7 @@ public partial class TerrainQuadTree
       return false;
     }
 
-    if (node.Depth < MinDepth)
+    if (node.Depth < _minDepth)
     {
       return false;
     }
@@ -117,8 +124,18 @@ public partial class TerrainQuadTree
       return false;
     }
 
-    float distanceToCamera = node.GlobalPositionCpy.DistanceTo(CameraPosition);
-    bool shouldMerge = MergeThresholds[node.Depth] < distanceToCamera;
+    float distanceToCamera = node.GlobalPositionCpy.DistanceTo(_cameraPosition);
+    bool shouldMerge = _mergeThresholds[node.Depth] < distanceToCamera;
+
+    // TODO:: should this be done here??? Awkward spot to update camera info ...
+    if (shouldMerge)
+    {
+      _lodCamera.MaxVisibleDepth =  node.Depth - 1;
+      // TODO:: This is NOT accurate altitude. Fix later when you introduce raycasting!
+      // We could be merging a node that is NOT directly underneat the camera thus we get
+      // an altitude at a weird angle to the ground rather than perpendicular.
+      _lodCamera.Altitude = Math.Max(_lodCamera.Altitude, distanceToCamera);
+    }
 
     return shouldMerge;
   }
@@ -130,7 +147,7 @@ public partial class TerrainQuadTree
       return false;
     }
 
-    if (parentNode.Depth < MinDepth)
+    if (parentNode.Depth < _minDepth)
     {
       return false;
     }

@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://bhjk68tdfdt1l" path="res://SolarSystem/Assets/ESO_-_Milky_Way.jpg" id="1_up5bf"]
 [ext_resource type="Script" uid="uid://b8mwhumswdquq" path="res://SolarSystem/Scenes/SolarSystem/SolarSystem.cs" id="2_obgtn"]
-[ext_resource type="Script" uid="uid://dwvbu3uevxbka" path="res://SolarSystem/Scenes/SolarSystem/MainCamera.cs" id="3_jbp3p"]
+[ext_resource type="Script" uid="uid://buo0lk5as552j" path="res://SolarSystem/Scenes/SolarSystem/LoDCamera.cs" id="3_jbp3p"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_aw4tg"]
 panorama = ExtResource("1_up5bf")
@@ -23,8 +23,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 150000, 0)
 light_energy = 100000.0
 omni_range = 200000.0
 
-[node name="MainCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 50000, 0)
-far = 50000.0
+[node name="LoDCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 42000, 0)
+far = 70000.0
 script = ExtResource("3_jbp3p")
-m_moveSpeed = 100.0

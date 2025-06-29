@@ -58,8 +58,8 @@ public class MapTile : GaiaResource
   private void AutoDetermineFields(double latitude, double longitude, int zoomLevel)
   {
     // Automatically determine tile coordinate, latitude/longitude range
-    LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinate(MapTileType, latitude, zoomLevel);
-    LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinate(MapTileType, longitude, zoomLevel);
+    LatitudeTileCoo = PlanetUtils.LatToTileCoo(MapTileType, latitude, zoomLevel);
+    LongitudeTileCoo = PlanetUtils.LonToTileCoo(MapTileType, longitude, zoomLevel);
     LatitudeRange = PlanetUtils.TileToLatRange(MapTileType, LatitudeTileCoo, zoomLevel);
     LongitudeRange = PlanetUtils.TileToLonRange(MapTileType, LongitudeTileCoo, zoomLevel);
   }

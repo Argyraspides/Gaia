@@ -23,27 +23,29 @@ public static partial class PlanetUtils
 {
   public enum PlanetShapeType
   {
-    EARTH_WGS84,
-    MERCURY,
-    VENUS,
-    MARS,
-    JUPITER,
-    SATURN,
-    URANUS,
-    NEPTUNE,
-    GENERIC_SPHERE,
-    UNKNOWN
+    EarthWgs84,
+    Mercury,
+    Venus,
+    Mars,
+    Jupiter,
+    Saturn,
+    Uranus,
+    Neptune,
+    GenericSphere,
+
+    Unknown
   }
 
   public enum PlanetSurfaceImgType
   {
-    SATELLITE,
-    STREET,
-    HYBRID,
+    Satellite,
+    Street,
+    Hybrid,
 
-    UNKNOWN
+    Unknown
   }
 
+  // TODO:: THERE IS A DUPLICATE HERE WITH MAP TILE FIGURE IT OUT LATER
   public enum PlanetTileType
   {
     WEB_MERCATOR_EARTH, // Standard, FLAT web-mercator projection
@@ -66,11 +68,11 @@ public static partial class PlanetUtils
   public const float EARTH_EQUATORIAL_RADIUS_KM = 6_378.137f;
 
 
-  public const float EARTH_POLAR_CIRCUMFERENCE_M = 40_007_863f;
-  public const float EARTH_POLAR_CIRCUMFERENCE_KM = 40_007.863f;
+  public const float EarthPolarCircumferenceM = 40_007_863f;
+  public const float EarthPolarCircumferenceKm = 40_007.863f;
 
-  public const float EARTH_EQUATORIAL_CIRCUMFERENCE_M = 40_075_017f;
-  public const float EARTH_EQUATORIAL_CIRCUMFERENCE_KM = 40_075.017f;
+  public const float EarthEquatorialCircumferenceM = 40_075_017f;
+  public const float EarthEquatorialCircumferenceKm = 40_075.017f;
 
   // Semi *minor* axis length of the Earth in meters and kilometers
   // using the WGS84 ellipsoid standard

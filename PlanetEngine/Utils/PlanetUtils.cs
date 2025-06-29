@@ -35,44 +35,44 @@ namespace Gaia.PlanetEngine.Utils;
 /// we wish to work with to keep the rest of the codebase generic
 public static partial class PlanetUtils
 {
-  public const double PI = Math.PI;
-  public const double TWO_PI = PI * 2.0;
+  public const double Pi = Math.PI;
+  public const double TwoPi = Pi * 2.0;
 
   /// <summary>
   ///   These aren't necessarily a universal constant. You can stop the Web Mercator projection at
   ///   any latitude you want besides the poles themselves which stretch to infinity. These
   ///   are just constants that most map providers use
   /// </summary>
-  public const double MIN_LATITUDE_LEVEL_WEB_MERCATOR = -1.484422229745;
+  public const double MinLatitudeLevelWebMercator = -1.484422229745;
 
-  public const double MAX_LATITUDE_LEVEL_WEB_MERCATOR = 1.484422229745;
+  public const double MaxLatitudeLevelWebMercator = 1.484422229745;
 
-  public const double MIN_LATITUDE = -Math.PI / 2.0;
-  public const double MAX_LATITUDE = Math.PI / 2.0;
+  public const double MinLatitude = -Math.PI / 2.0;
+  public const double MaxLatitude = Math.PI / 2.0;
 
-  public const double MIN_LONGITUDE = -Math.PI;
-  public const double MAX_LONGITUDE = Math.PI;
+  public const double MinLongitude = -Math.PI;
+  public const double MaxLongitude = Math.PI;
 
-  public const double RADIANS_TO_DEGREES = 180.0 / PI;
-  public const double DEGREES_TO_RADIANS = PI / 180.0;
+  public const double RadToDeg = 180.0 / Pi;
+  public const double DegToRad = Pi / 180.0;
 
-  public static int LatitudeToTileCoordinate(MapTileType mapTileType, double lat, int zoom)
+  public static int LatToTileCoo(MapTileType mapTileType, double lat, int zoom)
   {
     switch (mapTileType)
     {
       case MapTileType.WebMercatorEarth:
-        return LatitudeToTileCoordinateMercator(lat, zoom);
+        return LatToTileCooWebMercator(lat, zoom);
       default:
         throw new NotImplementedException();
     }
   }
 
-  public static int LongitudeToTileCoordinate(MapTileType mapTileType, double lon, int zoom)
+  public static int LonToTileCoo(MapTileType mapTileType, double lon, int zoom)
   {
     switch (mapTileType)
     {
       case MapTileType.WebMercatorEarth:
-        return LongitudeToTileCoordinateMercator(lon, zoom);
+        return LonToTileCooWebMercator(lon, zoom);
       default:
         throw new NotImplementedException();
     }
@@ -86,7 +86,7 @@ public static partial class PlanetUtils
   ///   Formula from:
   ///   https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#2._Convert_the_coordinate_to_the_Web_Mercator_projection_(https://epsg.io/3857)
   /// </summary>
-  public static int LatitudeToTileCoordinateMercator(double lat, int zoom)
+  public static int LatToTileCooWebMercator(double lat, int zoom)
   {
     if (zoom == 0)
     {
@@ -95,15 +95,15 @@ public static partial class PlanetUtils
 
     lat = Math.Clamp(
       lat,
-      MIN_LATITUDE_LEVEL_WEB_MERCATOR,
-      MAX_LATITUDE_LEVEL_WEB_MERCATOR
+      MinLatitudeLevelWebMercator,
+      MaxLatitudeLevelWebMercator
     );
 
     double tanExpr = Math.Tan(lat);
     double secExpr = 1.0 / Math.Cos(lat);
     double lnExpr = Math.Log(tanExpr + secExpr);
 
-    double divisionExpr = lnExpr / PI;
+    double divisionExpr = lnExpr / Pi;
 
     double bracketExpr = 1.0 - divisionExpr;
 
@@ -119,12 +119,12 @@ public static partial class PlanetUtils
   ///   Formula from:
   ///   https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#2._Convert_the_coordinate_to_the_Web_Mercator_projection_(https://epsg.io/3857)
   /// </summary>
-  public static int LongitudeToTileCoordinateMercator(double lon, int zoom)
+  public static int LonToTileCooWebMercator(double lon, int zoom)
   {
     int tilesPerSide = 1 << zoom;
 
-    double numeratorExpr = lon + PI;
-    double denominatorExpr = TWO_PI;
+    double numeratorExpr = lon + Pi;
+    double denominatorExpr = TwoPi;
 
     double divisionExpr = numeratorExpr / denominatorExpr;
 
@@ -145,8 +145,8 @@ public static partial class PlanetUtils
   /// <param name="tx">Tile x-coordinate</param>
   /// <param name="zoom">Zoom level (determines the total number of tiles at this zoom)</param>
   /// <returns>Longitude of the tile's western edge, in radians.</returns>
-  public static double TileCoordinateToLongitudeWebMercator(int tx, int zoom) =>
-    ((double)tx / (1 << zoom) * TWO_PI) - PI;
+  public static double TileCooToLonWebMercator(int tx, int zoom) =>
+    ((double)tx / (1 << zoom) * TwoPi) - Pi;
 
   /// <summary>
   ///   Converts a map tile's y-coordinate to the corresponding line of latitude (radians)
@@ -159,9 +159,9 @@ public static partial class PlanetUtils
   /// <param name="ty">Tile y-coordinate</param>
   /// <param name="zoom">Zoom level (determines the total number of tiles at this zoom)</param>
   /// <returns>Latitude of the tile's northern edge, in radians.</returns>
-  public static double TileCoordinateToLatitudeWebMercator(int ty, int zoom)
+  public static double TileCooToLatWebMercator(int ty, int zoom)
   {
-    double n = PI - (2.0 * PI * ty / (1 << zoom));
+    double n = Pi - (2.0 * Pi * ty / (1 << zoom));
     return Math.Atan(0.5 * (Math.Exp(n) - Math.Exp(-n)));
   }
 
@@ -186,10 +186,10 @@ public static partial class PlanetUtils
   public static (double latMin, double latMax, double lonMin, double lonMax) GetTileLatLonBounds(int tx, int ty,
     int zoom)
   {
-    double lonMin = TileCoordinateToLongitudeWebMercator(tx, zoom);
-    double lonMax = TileCoordinateToLongitudeWebMercator(tx + 1, zoom);
-    double latMin = TileCoordinateToLatitudeWebMercator(ty + 1, zoom);
-    double latMax = TileCoordinateToLatitudeWebMercator(ty, zoom);
+    double lonMin = TileCooToLonWebMercator(tx, zoom);
+    double lonMax = TileCooToLonWebMercator(tx + 1, zoom);
+    double latMin = TileCooToLatWebMercator(ty + 1, zoom);
+    double latMax = TileCooToLatWebMercator(ty, zoom);
     return (latMin, latMax, lonMin, lonMax);
   }
 
@@ -244,8 +244,8 @@ public static partial class PlanetUtils
   /// <returns></returns>
   public static string LatLonAndZoomToQuadKey(double lat, double lon, int zoom)
   {
-    int latTileCoo = LatitudeToTileCoordinateMercator(lat, zoom);
-    int lonTileCoo = LongitudeToTileCoordinateMercator(lon, zoom);
+    int latTileCoo = LatToTileCooWebMercator(lat, zoom);
+    int lonTileCoo = LonToTileCooWebMercator(lon, zoom);
     return TileCoordinatesToQuadkey(lonTileCoo, latTileCoo, zoom);
   }
 
@@ -276,7 +276,7 @@ public static partial class PlanetUtils
   /// </summary>
   public static double ComputeCenterLatitudeWebMercator(int latTileCoo, int zoom)
   {
-    double northEdge = TileCoordinateToLatitudeWebMercator(latTileCoo, zoom);
+    double northEdge = TileCooToLatWebMercator(latTileCoo, zoom);
     double latRange = TileToLatRangeWebMercator(latTileCoo, zoom);
     return northEdge - (latRange / 2);
   }
@@ -286,7 +286,7 @@ public static partial class PlanetUtils
   /// </summary>
   public static double ComputeCenterLongitudeWebMercator(int lonTileCoo, int zoom)
   {
-    double westEdge = TileCoordinateToLongitudeWebMercator(lonTileCoo, zoom);
+    double westEdge = TileCooToLonWebMercator(lonTileCoo, zoom);
     double lonRange = TileToLonRangeWebMercator(zoom);
     return westEdge + (lonRange / 2);
   }
@@ -321,15 +321,15 @@ public static partial class PlanetUtils
   {
     if (zoom == 0)
     {
-      return PI;
+      return Pi;
     }
 
     // Compute the top (northern) latitude of the tile
-    double latTop = TileCoordinateToLatitudeWebMercator(tileY, zoom);
+    double latTop = TileCooToLatWebMercator(tileY, zoom);
 
     // Compute the bottom (southern) latitude of the tile, which is just
     // the northern part of the tile below us
-    double latBottom = TileCoordinateToLatitudeWebMercator(tileY + 1, zoom);
+    double latBottom = TileCooToLatWebMercator(tileY + 1, zoom);
 
     // The difference in latitude (in radians) is:
     return latTop - latBottom;
@@ -341,7 +341,7 @@ public static partial class PlanetUtils
   public static double TileToLonRangeWebMercator(int zoom)
   {
     // The full 360° (2π) of longitude is divided evenly among 2^zoom tiles.
-    return TWO_PI / (1 << zoom);
+    return TwoPi / (1 << zoom);
   }
 
 
@@ -359,7 +359,7 @@ public static partial class PlanetUtils
   /// <param name="lat">Latitude in radians, range [-π/2, π/2]</param>
   /// <param name="lon">Longitude in radians, range [-π, π]</param>
   /// <returns>Normalized Cartesian coordinates as a Vector3</returns>
-  public static Vector3 LatLonToCartesianNormalizedWGS84(double lat, double lon)
+  public static Vector3 LatLonToCartesianNormalizedWgs84(double lat, double lon)
   {
     lat -= Math.PI / 2.0d;
     lon += Math.PI;
@@ -385,8 +385,8 @@ public static partial class PlanetUtils
   {
     switch (pst)
     {
-      case PlanetShapeType.EARTH_WGS84:
-        return LatLonToCartesianWGS84(lat, lon);
+      case PlanetShapeType.EarthWgs84:
+        return LatLonToCartesianWgs84(lat, lon);
     }
 
     throw new InvalidOperationException("Unknown planet shape type!");
@@ -397,7 +397,7 @@ public static partial class PlanetUtils
     switch (tileType)
     {
       case PlanetTileType.WEB_MERCATOR_WGS84:
-        return LatLonToCartesianNormalizedWGS84(lat, lon);
+        return LatLonToCartesianNormalizedWgs84(lat, lon);
     }
 
     throw new InvalidOperationException("Unknown planet shape type!");
@@ -415,7 +415,7 @@ public static partial class PlanetUtils
   /// <param name="lat">Latitude in radians, range [-π/2, π/2]</param>
   /// <param name="lon">Longitude in radians, range [-π, π]</param>
   /// <returns>Cartesian coordinates in kilometers as a Vector3</returns>
-  public static Vector3 LatLonToCartesianWGS84(double lat, double lon)
+  public static Vector3 LatLonToCartesianWgs84(double lat, double lon)
   {
     lat -= Math.PI / 2.0;
     lon += Math.PI;
@@ -448,7 +448,7 @@ public static partial class PlanetUtils
   /// <param name="lat">Latitude in radians, range [-π/2, π/2]</param>
   /// <param name="lon">Longitude in radians, range [-π, π]</param>
   /// <returns>Normalized X coordinate</returns>
-  public static double LatLonToCartesianWGS84X(double lat, double lon)
+  public static double LatLonToCartesianWgs84X(double lat, double lon)
   {
     lat -= Math.PI / 2.0;
     lon += Math.PI;
@@ -466,7 +466,7 @@ public static partial class PlanetUtils
   /// </summary>
   /// <param name="lat">Latitude in radians, range [-π/2, π/2]</param>
   /// <returns>Normalized Y coordinate</returns>
-  public static double LatLonToCartesianWGS84Y(double lat)
+  public static double LatLonToCartesianWgs84Y(double lat)
   {
     lat -= Math.PI / 2.0;
     double minorToMajorRatio = EARTH_POLAR_RADIUS_KM /
@@ -487,7 +487,7 @@ public static partial class PlanetUtils
   /// <param name="lat">Latitude in radians, range [-π/2, π/2]</param>
   /// <param name="lon">Longitude in radians, range [-π, π]</param>
   /// <returns>Normalized Z coordinate</returns>
-  public static double LatLonToCartesianWGS84Z(double lat, double lon)
+  public static double LatLonToCartesianWgs84Z(double lat, double lon)
   {
     lat -= Math.PI / 2.0;
     lon += Math.PI;
@@ -510,7 +510,7 @@ public static partial class PlanetUtils
   /// <param name="lon">Longitude in radians, range [-π, π]</param>
   /// <param name="alt">Altitude in kilometers from the WGS84 ellipsoid surface</param>
   /// <returns>Cartesian coordinates in kilometers as a Vector3</returns>
-  public static Vector3 LatLonToCartesianWGS84(double lat, double lon, double alt)
+  public static Vector3 LatLonToCartesianWgs84(double lat, double lon, double alt)
   {
     lat -= Math.PI / 2.0;
     lon += Math.PI;
@@ -552,7 +552,7 @@ public static partial class PlanetUtils
   /// <returns>Location of the lat/lon coordinate in 2D cartesian space, units of kilometers</returns>
   public static Vector2 LatLonToCartesianWebMercator(double lat, double lon)
   {
-    if (lat < MIN_LATITUDE_LEVEL_WEB_MERCATOR || lat > MAX_LATITUDE_LEVEL_WEB_MERCATOR)
+    if (lat < MinLatitudeLevelWebMercator || lat > MaxLatitudeLevelWebMercator)
     {
       throw new ArgumentOutOfRangeException("Latitude outside the proper range for a web mercator projection!");
     }
@@ -572,7 +572,7 @@ public static partial class PlanetUtils
 
   public static Vector2 LatLonToCartesianWebMercatorNormalized(double lat, double lon)
   {
-    if (lat < MIN_LATITUDE_LEVEL_WEB_MERCATOR || lat > MAX_LATITUDE_LEVEL_WEB_MERCATOR)
+    if (lat < MinLatitudeLevelWebMercator || lat > MaxLatitudeLevelWebMercator)
     {
       throw new ArgumentOutOfRangeException("Latitude outside the proper range for a web mercator projection!");
     }
@@ -593,34 +593,34 @@ public static partial class PlanetUtils
   {
     switch (shapeType)
     {
-      case PlanetShapeType.GENERIC_SPHERE:
+      case PlanetShapeType.GenericSphere:
         return (BLANK_PLANET_SEMI_MAJOR_AXIS_LEN_KM, BLANK_PLANET_SEMI_MINOR_AXIS_LEN_KM);
 
-      case PlanetShapeType.EARTH_WGS84:
+      case PlanetShapeType.EarthWgs84:
         return (EARTH_EQUATORIAL_RADIUS_KM, EARTH_POLAR_RADIUS_KM);
 
-      case PlanetShapeType.MERCURY:
+      case PlanetShapeType.Mercury:
         return (MERCURY_SEMI_MAJOR_AXIS_LEN_KM, MERCURY_SEMI_MINOR_AXIS_LEN_KM);
 
-      case PlanetShapeType.VENUS:
+      case PlanetShapeType.Venus:
         return (VENUS_SEMI_MAJOR_AXIS_LEN_KM, VENUS_SEMI_MINOR_AXIS_LEN_KM);
 
-      case PlanetShapeType.MARS:
+      case PlanetShapeType.Mars:
         return (MARS_SEMI_MAJOR_AXIS_LEN_KM, MARS_SEMI_MINOR_AXIS_LEN_KM);
 
-      case PlanetShapeType.JUPITER:
+      case PlanetShapeType.Jupiter:
         return (JUPITER_SEMI_MAJOR_AXIS_LEN_KM, JUPITER_SEMI_MINOR_AXIS_LEN_KM);
 
-      case PlanetShapeType.SATURN:
+      case PlanetShapeType.Saturn:
         return (SATURN_SEMI_MAJOR_AXIS_LEN_KM, SATURN_SEMI_MINOR_AXIS_LEN_KM);
 
-      case PlanetShapeType.URANUS:
+      case PlanetShapeType.Uranus:
         return (URANUS_SEMI_MAJOR_AXIS_LEN_KM, URANUS_SEMI_MINOR_AXIS_LEN_KM);
 
-      case PlanetShapeType.NEPTUNE:
+      case PlanetShapeType.Neptune:
         return (NEPTUNE_SEMI_MAJOR_AXIS_LEN_KM, NEPTUNE_SEMI_MINOR_AXIS_LEN_KM);
 
-      case PlanetShapeType.UNKNOWN:
+      case PlanetShapeType.Unknown:
         return (BLANK_PLANET_SEMI_MAJOR_AXIS_LEN_KM, BLANK_PLANET_SEMI_MINOR_AXIS_LEN_KM);
 
       default:
@@ -640,7 +640,7 @@ public static partial class PlanetUtils
     double sphereCircum
   )
   {
-    double range = radius / sphereCircum * TWO_PI;
+    double range = radius / sphereCircum * TwoPi;
     return (range, range);
   }
 

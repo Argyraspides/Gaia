@@ -9,7 +9,7 @@ public static class Logger
 {
   // Class name -> logging enabled/disabled
   private static readonly Dictionary<string, bool> _registeredClasses = new();
-  private static readonly bool _godotLoggingEnabled = false;
+  private static bool _godotLoggingEnabled;
 
   [Conditional("ENABLE_LOGGING")]
   public static void RegisterLogging<T>(this T obj, bool enabled) => _registeredClasses.TryAdd(typeof(T).Name, enabled);

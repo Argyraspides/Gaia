@@ -19,17 +19,33 @@
 
 using Gaia.Common.Utils.Godot;
 using Gaia.Common.Utils.Logging;
+using Gaia.PlanetEngine.Utils;
+using Gaia.SolarSystem.Scenes.SolarSystem;
 using Godot;
 
 public partial class SolarSystem : WorldEnvironment
 {
-  private MainCamera _camera;
+
+  // START CAMERA ============================
+  private LoDCamera _camera;
+  private float _cameraSpeedMultiplier = 1.0f;
+  // END CAMERA ==============================
+
+  // START EARTH =============================
   private Earth _earth;
+
+  private double _earthEquatorialCircumference
+    = PlanetUtils.EarthEquatorialCircumferenceKm;
+
+  private double _earthPolarCircumference
+    = PlanetUtils.EarthPolarCircumferenceM;
+  // END EARTH ===============================
+
 
   public override void _Ready()
   {
     base._Ready();
-    _camera = GetNode<MainCamera>("MainCamera");
+    _camera = GetNode<LoDCamera>("LoDCamera");
 
     LoadEarth();
   }
@@ -49,7 +65,4 @@ public partial class SolarSystem : WorldEnvironment
     AddChild(_earth);
   }
 
-  private void AdjustCameraSpeed()
-  {
-  }
 }

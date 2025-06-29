@@ -37,8 +37,8 @@ public class BingMercatorMapTile : MapTile
     // Convert tile coordinates to lat/lon
     (Latitude, Longitude, ZoomLevel) = PlanetUtils.QuadKeyToLatLonAndZoom(quadKey);
 
-    LatitudeTileCoo = PlanetUtils.LatitudeToTileCoordinateMercator(Latitude, ZoomLevel);
-    LongitudeTileCoo = PlanetUtils.LongitudeToTileCoordinateMercator(Longitude, ZoomLevel);
+    LatitudeTileCoo = PlanetUtils.LatToTileCooWebMercator(Latitude, ZoomLevel);
+    LongitudeTileCoo = PlanetUtils.LonToTileCooWebMercator(Longitude, ZoomLevel);
 
     LatitudeRange = PlanetUtils.TileToLatRangeWebMercator(LatitudeTileCoo, ZoomLevel);
     LongitudeRange = PlanetUtils.TileToLonRangeWebMercator(LongitudeTileCoo);
