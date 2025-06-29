@@ -1,4 +1,6 @@
+using System;
 using Godot;
+using Godot.Collections;
 
 namespace Gaia.Common.Utils.Godot;
 
@@ -7,7 +9,7 @@ namespace Gaia.Common.Utils.Godot;
 ///   of
 ///   boilerplate to make.
 /// </summary>
-public static class GodotUtils
+public static partial class GodotUtils
 {
   /// <summary>
   ///   Checks if a Godot object is valid in the "Godot space", in "C# space", and if the object is not about to be

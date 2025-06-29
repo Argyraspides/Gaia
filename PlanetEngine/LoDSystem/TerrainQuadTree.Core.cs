@@ -137,7 +137,7 @@ public sealed partial class TerrainQuadTree : Node3D
     if (_splitQueueNodes.IsEmpty && _mergeQueueNodes.IsEmpty)
     {
       _canUpdateQuadTree.Reset();
-      CanPerformCulling.Set();
+      _canPerformCulling.Set();
     }
   }
 
@@ -195,10 +195,10 @@ public sealed partial class TerrainQuadTree : Node3D
   {
     _splitOrMergeSearchThread = new Thread(DetermineSplitOrMerge) { IsBackground = true, Name = "QuadTreeUpdateThread" };
 
-    CullThread = new Thread(StartCulling) { IsBackground = true, Name = "CullQuadTreeThread" };
+    _cullThread = new Thread(StartCulling) { IsBackground = true, Name = "CullQuadTreeThread" };
 
     _splitOrMergeSearchThread.Start();
-    CullThread.Start();
+    _cullThread.Start();
     _canPerformSearch.Set();
     _isRunning = true;
   }
@@ -211,12 +211,12 @@ public sealed partial class TerrainQuadTree : Node3D
       _splitOrMergeSearchThread.Join(_threadJoinTimeoutMs);
     }
 
-    if (CullThread != null && CullThread.IsAlive)
+    if (_cullThread != null && _cullThread.IsAlive)
     {
-      CullThread.Join(_threadJoinTimeoutMs);
+      _cullThread.Join(_threadJoinTimeoutMs);
     }
 
-    CanPerformCulling.Dispose();
+    _canPerformCulling.Dispose();
     _canPerformSearch.Dispose();
   }
 
@@ -282,6 +282,10 @@ public sealed partial class TerrainQuadTree : Node3D
 
     for (int zoom = 0; zoom < _baseAltitudeThresholds.Length; zoom++)
     {
+      // TODO:: This needs to be improved
+      // Set the split/merge thresholds as the distance each tile represents at any zoom level along
+      // lines of latitude. This is clean for now but isn't optimal for viewing IMO.
+      // Really try and mimic human vision when splitting/merging!
       _baseAltitudeThresholds[zoom] = PlanetUtils.EarthEquatorialCircumferenceKm / (1 << zoom);
     }
 

@@ -97,5 +97,8 @@ public partial class LoDCamera : Camera3D
     _moveSpeed = (2 / tileSpan) * tileWidth;
   }
 
+  private void DetermineAltitude()
+  {}
+
 }
 

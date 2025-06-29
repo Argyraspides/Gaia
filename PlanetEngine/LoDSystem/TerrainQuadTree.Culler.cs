@@ -7,14 +7,14 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public partial class TerrainQuadTree
 {
-  private readonly ManualResetEventSlim CanPerformCulling = new(false);
-  private Thread CullThread;
+  private readonly ManualResetEventSlim _canPerformCulling = new(false);
+  private Thread _cullThread;
 
   private void StartCulling()
   {
     while (_isRunning)
     {
-      CanPerformCulling.Wait();
+      _canPerformCulling.Wait();
       try
       {
         foreach (TerrainQuadTreeNode rootNode in _rootNodes)
@@ -27,7 +27,7 @@ public partial class TerrainQuadTree
           CullUnusedNodes(rootNode);
         }
 
-        CanPerformCulling.Reset();
+        _canPerformCulling.Reset();
         _canPerformSearch.Set();
       }
       catch (Exception ex)
