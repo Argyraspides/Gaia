@@ -26,6 +26,6 @@ namespace Gaia.PlanetEngine.MapDataRetrieval;
 
 public interface IMapProvider<TQueryParameters> where TQueryParameters : IQueryParameters
 {
-    public Task<MapTile> RequestMapTileAsync(TQueryParameters queryParameters);
-    public Task<byte[]> RequestRawMapTileAsync(TQueryParameters queryParameters);
+  public Task<MapTile> RequestMapTile(TQueryParameters queryParameters);
+  public Task<byte[]> RequestRawMapTile(TQueryParameters queryParameters);
 }

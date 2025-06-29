@@ -5,6 +5,7 @@
         <DefineConstants>ENABLE_LOGGING</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
+        <Content Include=".editorconfig"/>
         <Content Include="Common\UI\Fonts\Equinox\Equinox Bold.otf"/>
         <Content Include="Common\UI\Fonts\Equinox\Equinox Regular.otf"/>
         <Content Include="Common\UI\Fonts\Jura\Jura-Bold.ttf"/>

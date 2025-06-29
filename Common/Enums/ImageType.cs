@@ -2,10 +2,10 @@ namespace Gaia.Common.Enums;
 
 public enum ImageType
 {
-    BMP = 0,
-    JPEG = 1,
-    GIF = 2,
-    TIFF = 3,
-    PNG = 4,
-    UNKNOWN = int.MaxValue
+  Bmp = 0,
+  Jpeg = 1,
+  Gif = 2,
+  Tiff = 3,
+  Png = 4,
+  Unknown = int.MaxValue
 }

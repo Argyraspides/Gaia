@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Threading;
 using Gaia.Common.Utils.Godot;
 using Gaia.Common.Utils.Logging;
@@ -33,405 +32,397 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public sealed partial class TerrainQuadTree : Node3D
 {
-    [Signal]
-    public delegate void QuadTreeLoadedEventHandler();
+  [Signal]
+  public delegate void QuadTreeLoadedEventHandler();
 
-    private bool _quadTreeLoaded = false;
+  private const int _maxQueueUpdatesPerFrame = 50;
 
-    // Size of the world this quadtree handles in the directions of latitude/longitude
-    // of said world. E.g., Earth as a globe has WorldSizeLatKm as the circumference along lines of longitude 
-    public double WorldSizeLatKm { get; private set; }
-    public double WorldSizeLonKm { get; private set; }
-    public int MaxDepth { get; private set; }
-    public int MinDepth { get; private set; }
-    public int CurrDepth { get; private set; }
+  private const float _mergeThresholdFactor = 1.15F;
 
-    public MapTileType MapTileType { get; private set; }
+  private const int _maxDepthLimit = 23;
+  private const int _minDepthLimit = 1;
 
-    public long MaxNodes { get; private set; }
+  private const string _nodeGroupName = "TerrainQuadTreeNodes";
+  private readonly MainCamera _camera;
 
-    public double[] SplitThresholds { get; private set; }
-    public double[] MergeThresholds { get; private set; }
+  public readonly double[] BaseAltitudeThresholds = new double[]
+  {
+    156_000.0f, 78_000.0f, 39_000.0f, 19_500.0f, 9_750.0f, 4_875.0f, 2_437.5f, 1_218.75f, 609.375f, 304.6875f,
+    152.34f, 76.17f, 38.08f, 19.04f, 9.52f, 4.76f, 2.38f, 1.2f, 0.6f, 0.35f
+  };
 
-    private ManualResetEventSlim CanUpdateQuadTree = new ManualResetEventSlim(false);
+  private readonly ManualResetEventSlim _canUpdateQuadTree = new(false);
 
-    public List<TerrainQuadTreeNode> RootNodes { get; private set; }
+  private bool _quadTreeLoaded;
+  public ConcurrentQueue<TerrainQuadTreeNode> MergeQueueNodes = new();
+  public ConcurrentQueue<TerrainQuadTreeNode> SplitQueueNodes = new();
 
-    // Reading inherent properties of nodes is not thread-safe in Godot. Here we make a custom Vector3
-    // which is a copy of the camera's position updated from the TerrainQuadTree thread, so that it can
-    // be accessed by the TerrainQuadTreeUpdater thread safely
-    public Vector3 CameraPosition { get; private set; }
-    private readonly Camera3D m_camera;
+  public TerrainQuadTree() { }
 
-    public ConcurrentQueue<TerrainQuadTreeNode> SplitQueueNodes = new ConcurrentQueue<TerrainQuadTreeNode>();
-    public ConcurrentQueue<TerrainQuadTreeNode> MergeQueueNodes = new ConcurrentQueue<TerrainQuadTreeNode>();
-
-    // If we hit x% of the maximum allowed amount of nodes, we will begin culling unused nodes in the quadtree
-    public float MaxNodesCleanupThresholdPercent { get; private set; } = 0.90F;
-
-    private const int MaxQueueUpdatesPerFrame = 50;
-
-    private const float MergeThresholdFactor = 1.15F;
-
-    private const int MAX_DEPTH_LIMIT = 23;
-    private const int MIN_DEPTH_LIMIT = 1;
-
-    private const string NodeGroupName = "TerrainQuadTreeNodes";
-
-    private readonly double[] m_baseAltitudeThresholds = new double[]
+  public TerrainQuadTree(
+    MainCamera camera,
+    MapTileType tileType,
+    int maxNodes = 10000,
+    int minDepth = 0,
+    int maxDepth = 20,
+    float worldSizeLat = PlanetUtils.EARTH_POLAR_CIRCUMFERENCE_KM,
+    float worldSizeLon = PlanetUtils.EARTH_EQUATORIAL_CIRCUMFERENCE_KM)
+  {
+    if (maxDepth > _maxDepthLimit || maxDepth < _minDepthLimit)
     {
-        156000.0f, 78000.0f, 39000.0f, 19500.0f, 9750.0f, 4875.0f, 2437.5f, 1218.75f, 609.375f, 304.6875f, 152.34f,
-        76.17f, 38.08f, 19.04f, 9.52f, 4.76f, 2.38f, 1.2f, 0.6f, 0.35f
-    };
-
-    public TerrainQuadTree(
-        Camera3D camera,
-        MapTileType tileType,
-        int maxNodes = 10000,
-        int minDepth = 0,
-        int maxDepth = 20,
-        float worldSizeLat = PlanetUtils.EARTH_POLAR_CIRCUMFERENCE_KM,
-        float worldSizeLon = PlanetUtils.EARTH_EQUATORIAL_CIRCUMFERENCE_KM)
-    {
-        if (maxDepth > MAX_DEPTH_LIMIT || maxDepth < MIN_DEPTH_LIMIT)
-        {
-            throw new ArgumentException($"maxDepth must be between {MIN_DEPTH_LIMIT} and {MAX_DEPTH_LIMIT}");
-        }
-
-        if (maxDepth < minDepth)
-        {
-            throw new ArgumentException("maxDepth must be greater than minDepth");
-        }
-
-        if (maxNodes <= 0)
-        {
-            throw new ArgumentException("maxNodes must be positive");
-        }
-
-        if (tileType == MapTileType.UNKNOWN)
-        {
-            throw new ArgumentException("Cannot make a LoD system with an unknown map tile type!");
-        }
-
-        m_camera = camera ?? throw new ArgumentNullException(nameof(camera));
-        MaxNodes = maxNodes;
-        MinDepth = minDepth;
-        MaxDepth = maxDepth;
-        MapTileType = tileType;
-        WorldSizeLatKm = worldSizeLat;
-        WorldSizeLonKm = worldSizeLon;
-
-        InitializeAltitudeThresholds();
-        QuadTreeLoaded += GlobalEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
-        this.RegisterLogging(true);
+      throw new ArgumentException($"maxDepth must be between {_minDepthLimit} and {_maxDepthLimit}");
     }
 
-    public override void _Process(double delta)
+    if (maxDepth < minDepth)
     {
-        CameraPosition = m_camera.GlobalPosition;
-        if (CanUpdateQuadTree.IsSet)
-        {
-            ProcessSplitQueue();
-            ProcessMergeQueue();
-        }
-
-        if (SplitQueueNodes.IsEmpty && MergeQueueNodes.IsEmpty)
-        {
-            CanUpdateQuadTree.Reset();
-            CanPerformCulling.Set();
-        }
+      throw new ArgumentException("maxDepth must be greater than minDepth");
     }
 
-    public override void _ExitTree()
+    if (maxNodes <= 0)
     {
-        base._ExitTree();
-        Stop();
+      throw new ArgumentException("maxNodes must be positive");
     }
 
-    public void InitializeQuadTree(int zoomLevel)
+    if (tileType == MapTileType.Unknown)
     {
-        if (zoomLevel > MaxDepth || zoomLevel < MinDepth)
-        {
-            throw new ArgumentException($"zoomLevel must be between {MinDepth} and {MaxDepth}");
-        }
-
-        CurrDepth = zoomLevel;
-        RootNodes = new List<TerrainQuadTreeNode>();
-
-        int nodesPerSide = (1 << zoomLevel); // 2^z
-        int nodesInLevel = nodesPerSide * nodesPerSide; // 4^z
-        for (int i = 0; i < nodesInLevel; i++)
-        {
-            int latTileCoo = i / nodesPerSide;
-            int lonTileCoo = i % nodesPerSide;
-
-            TerrainQuadTreeNode n = CreateNode(latTileCoo, lonTileCoo, zoomLevel);
-
-            n.IsDeepestVisible = true;
-            n.Name = $"TerrainQuadTreeNode_{latTileCoo}_{lonTileCoo}";
-
-            RootNodes.Add(n);
-            AddChild(n);
-
-            n.Chunk.TerrainChunkLoaded += OnTerrainChunkLoaded;
-
-            InitializeTerrainNode(n);
-        }
-
-        Start();
+      throw new ArgumentException("Cannot make a LoD system with an unknown map tile type!");
     }
 
-    private void OnTerrainChunkLoaded()
+    _camera = camera ?? throw new ArgumentNullException("TerrainQuadTree needs a camera!");
+    MaxNodes = maxNodes;
+    MinDepth = minDepth;
+    MaxDepth = maxDepth;
+    MapTileType = tileType;
+    WorldSizeLatKm = worldSizeLat;
+    WorldSizeLonKm = worldSizeLon;
+
+    InitializeAltitudeThresholds();
+    QuadTreeLoaded += GlobalEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
+    this.RegisterLogging(true);
+  }
+
+  // Size of the world this quadtree handles in the directions of latitude/longitude
+  // of said world. E.g., Earth as a globe has WorldSizeLatKm as the circumference along lines of longitude
+  public double WorldSizeLatKm { get; private set; }
+  public double WorldSizeLonKm { get; private set; }
+  public int MaxDepth { get; private set; }
+  public int MinDepth { get; private set; }
+  public int CurrDepth { get; private set; }
+
+  public MapTileType MapTileType { get; private set; }
+
+  public long MaxNodes { get; private set; }
+
+  public double[] SplitThresholds { get; private set; }
+  public double[] MergeThresholds { get; private set; }
+
+  public List<TerrainQuadTreeNode> RootNodes { get; private set; }
+
+  // Reading inherent properties of nodes is not thread-safe in Godot. Here we make a custom Vector3
+  // which is a copy of the camera's position updated from the TerrainQuadTree thread, so that it can
+  // be accessed by the TerrainQuadTreeUpdater thread safely
+  public Vector3 CameraPosition { get; private set; }
+
+  // If we hit x% of the maximum allowed amount of nodes, we will begin culling unused nodes in the quadtree
+  public float MaxNodesCleanupThresholdPercent { get; private set; } = 0.90F;
+
+  public override void _Process(double delta)
+  {
+    CameraPosition = _camera.GlobalPosition;
+    if (_canUpdateQuadTree.IsSet)
     {
-        int currNodeCt = GetTree().GetNodesInGroup(NodeGroupName).Count;
-        int nodesPerSide = (1 << CurrDepth);
-        int nodesInLevel = nodesPerSide * nodesPerSide;
-        if (currNodeCt == nodesInLevel)
-        {
-            EmitSignal(SignalName.QuadTreeLoaded);
-        }
+      ProcessSplitQueue();
+      ProcessMergeQueue();
     }
 
-    private void Start()
+    if (SplitQueueNodes.IsEmpty && MergeQueueNodes.IsEmpty)
     {
-        SplitOrMergeSearchThread = new Thread(DetermineSplitOrMerge)
-        {
-            IsBackground = true, Name = "QuadTreeUpdateThread"
-        };
+      _canUpdateQuadTree.Reset();
+      CanPerformCulling.Set();
+    }
+  }
 
-        CullThread = new Thread(StartCulling)
-        {
-            IsBackground = true, Name = "CullQuadTreeThread"
-        };
+  public override void _ExitTree()
+  {
+    base._ExitTree();
+    Stop();
+  }
 
-        SplitOrMergeSearchThread.Start();
-        CullThread.Start();
-        CanPerformSearch.Set();
-        m_isRunning = true;
+  public void InitializeQuadTree(int zoomLevel)
+  {
+    if (zoomLevel > MaxDepth || zoomLevel < MinDepth)
+    {
+      throw new ArgumentException($"zoomLevel must be between {MinDepth} and {MaxDepth}");
     }
 
-    private void Stop()
+    CurrDepth = zoomLevel;
+    RootNodes = new List<TerrainQuadTreeNode>();
+
+    int nodesPerSide = 1 << zoomLevel; // 2^z
+    int nodesInLevel = nodesPerSide * nodesPerSide; // 4^z
+    for (int i = 0; i < nodesInLevel; i++)
     {
-        m_isRunning = false;
-        if (SplitOrMergeSearchThread != null && SplitOrMergeSearchThread.IsAlive)
-        {
-            SplitOrMergeSearchThread.Join(THREAD_JOIN_TIMEOUT_MS);
-        }
+      int latTileCoo = i / nodesPerSide;
+      int lonTileCoo = i % nodesPerSide;
 
-        if (CullThread != null && CullThread.IsAlive)
-        {
-            CullThread.Join(THREAD_JOIN_TIMEOUT_MS);
-        }
+      TerrainQuadTreeNode n = CreateNode(latTileCoo, lonTileCoo, zoomLevel);
 
-        CanPerformCulling.Dispose();
-        CanPerformSearch.Dispose();
+      n.IsDeepestVisible = true;
+      n.Name = $"TerrainQuadTreeNode_{latTileCoo}_{lonTileCoo}";
+
+      RootNodes.Add(n);
+      AddChild(n);
+
+      n.Chunk.TerrainChunkLoaded += OnTerrainChunkLoaded;
+
+      InitializeTerrainNode(n);
     }
 
-    ~TerrainQuadTree()
+    Start();
+  }
+
+  private void OnTerrainChunkLoaded()
+  {
+    int currNodeCt = GetTree().GetNodesInGroup(_nodeGroupName).Count;
+    int nodesPerSide = 1 << CurrDepth;
+    int nodesInLevel = nodesPerSide * nodesPerSide;
+    if (currNodeCt == nodesInLevel)
     {
-        Stop();
+      EmitSignal(SignalName.QuadTreeLoaded);
+    }
+  }
+
+  private void Start()
+  {
+    SplitOrMergeSearchThread = new Thread(DetermineSplitOrMerge) { IsBackground = true, Name = "QuadTreeUpdateThread" };
+
+    CullThread = new Thread(StartCulling) { IsBackground = true, Name = "CullQuadTreeThread" };
+
+    SplitOrMergeSearchThread.Start();
+    CullThread.Start();
+    CanPerformSearch.Set();
+    m_isRunning = true;
+  }
+
+  private void Stop()
+  {
+    m_isRunning = false;
+    if (SplitOrMergeSearchThread != null && SplitOrMergeSearchThread.IsAlive)
+    {
+      SplitOrMergeSearchThread.Join(THREAD_JOIN_TIMEOUT_MS);
     }
 
-    private void InitializeTerrainNode(TerrainQuadTreeNode node)
+    if (CullThread != null && CullThread.IsAlive)
     {
-        if (!GodotUtils.IsValid(node))
-        {
-            this.LogError("TerrainQuadTree::InitializeTerrainNodeMesh: Invalid terrain node!");
-            return;
-        }
-
-        node.Chunk.MeshInstance = MeshGenerator.GenerateMesh(MapTileType);
-        node.AddToGroup(NodeGroupName);
-        node.Chunk.Load();
-
-        PositionTerrainNode(node);
+      CullThread.Join(THREAD_JOIN_TIMEOUT_MS);
     }
 
-    private void PositionTerrainNode(TerrainQuadTreeNode node)
+    CanPerformCulling.Dispose();
+    CanPerformSearch.Dispose();
+  }
+
+  ~TerrainQuadTree()
+  {
+    Stop();
+  }
+
+  private void InitializeTerrainNode(TerrainQuadTreeNode node)
+  {
+    if (!GodotUtils.IsValid(node))
     {
-        switch (MapTileType)
-        {
-            case MapTileType.WEB_MERCATOR_EARTH:
-                PositionTerrainNodeFlat(node);
-                break;
-            case MapTileType.WEB_MERCATOR_WGS84:
-                PositionTerrainNodeGlobe(node);
-                break;
-        }
+      this.LogError("TerrainQuadTree::InitializeTerrainNodeMesh: Invalid terrain node!");
+      return;
     }
 
-    private void PositionTerrainNodeFlat(TerrainQuadTreeNode node)
+    node.Chunk.MeshInstance = MeshGenerator.GenerateMesh(MapTileType);
+    node.AddToGroup(_nodeGroupName);
+    node.Chunk.Load();
+
+    PositionTerrainNode(node);
+  }
+
+  private void PositionTerrainNode(TerrainQuadTreeNode node)
+  {
+    switch (MapTileType)
     {
-        int zoomLevel = node.Chunk.MapTile.ZoomLevel;
-        int tilesPerSide = (int)Math.Pow(2, zoomLevel);
+      case MapTileType.WebMercatorEarth:
+        PositionTerrainNodeFlat(node);
+        break;
+      case MapTileType.WebMercatorWgs84:
+        PositionTerrainNodeGlobe(node);
+        break;
+    }
+  }
 
-        double trueTileWidth = WorldSizeLonKm / tilesPerSide;
-        double trueTileHeight = WorldSizeLatKm / tilesPerSide;
+  private void PositionTerrainNodeFlat(TerrainQuadTreeNode node)
+  {
+    int zoomLevel = node.Chunk.MapTile.ZoomLevel;
+    int tilesPerSide = (int)Math.Pow(2, zoomLevel);
 
-        int latCoo = PlanetUtils.LatitudeToTileCoordinate(MapTileType, node.Chunk.MapTile.Latitude, zoomLevel);
-        int lonCoo = PlanetUtils.LongitudeToTileCoordinate(MapTileType, node.Chunk.MapTile.Longitude, zoomLevel);
+    double trueTileWidth = WorldSizeLonKm / tilesPerSide;
+    double trueTileHeight = WorldSizeLatKm / tilesPerSide;
 
-        double xCoo = (-WorldSizeLonKm / 2) + (lonCoo + 0.5f) * trueTileWidth;
-        double zCoo = -((WorldSizeLatKm / 2) - (latCoo + 0.5f) * trueTileHeight);
+    int latCoo = PlanetUtils.LatitudeToTileCoordinate(MapTileType, node.Chunk.MapTile.Latitude, zoomLevel);
+    int lonCoo = PlanetUtils.LongitudeToTileCoordinate(MapTileType, node.Chunk.MapTile.Longitude, zoomLevel);
 
-        node.Chunk.Scale = new Vector3((float)trueTileWidth, 1, (float)trueTileHeight);
-        node.GlobalPosition = new Vector3((float)xCoo, 0.0f, (float)zCoo);
-        node.GlobalPositionCpy = node.GlobalPosition;
+    double xCoo = (-WorldSizeLonKm / 2) + ((lonCoo + 0.5f) * trueTileWidth);
+    double zCoo = -((WorldSizeLatKm / 2) - ((latCoo + 0.5f) * trueTileHeight));
+
+    node.Chunk.Scale = new Vector3((float)trueTileWidth, 1, (float)trueTileHeight);
+    node.GlobalPosition = new Vector3((float)xCoo, 0.0f, (float)zCoo);
+    node.GlobalPositionCpy = node.GlobalPosition;
+  }
+
+  private void PositionTerrainNodeGlobe(TerrainQuadTreeNode node) => throw new NotImplementedException();
+
+  private void InitializeAltitudeThresholds()
+  {
+    SplitThresholds = new double[MaxDepth + 1];
+    MergeThresholds = new double[MaxDepth + 2];
+
+    for (int zoom = 0; zoom < BaseAltitudeThresholds.Length; zoom++)
+    {
+      // BaseAltitudeThresholds[zoom] /= 2;
+      SplitThresholds[zoom] = BaseAltitudeThresholds[zoom];
     }
 
-    private void PositionTerrainNodeGlobe(TerrainQuadTreeNode node)
+    for (int zoom = 1; zoom < BaseAltitudeThresholds.Length; zoom++)
     {
-        throw new NotImplementedException();
+      MergeThresholds[zoom] = SplitThresholds[zoom - 1] * _mergeThresholdFactor;
+    }
+  }
+
+  private void ProcessSplitQueue()
+  {
+    int dequeuesProcessed = 0;
+
+    while (SplitQueueNodes.TryDequeue(out TerrainQuadTreeNode node) &&
+           dequeuesProcessed++ < _maxQueueUpdatesPerFrame)
+    {
+      SplitNode(node);
+    }
+  }
+
+  private void ProcessMergeQueue()
+  {
+    int dequeuesProcessed = 0;
+    while (MergeQueueNodes.TryDequeue(out TerrainQuadTreeNode node) &&
+           dequeuesProcessed++ < _maxQueueUpdatesPerFrame)
+    {
+      MergeNodeChildren(node);
+    }
+  }
+
+  private void SplitNode(TerrainQuadTreeNode node)
+  {
+    if (!GodotUtils.IsValid(node))
+    {
+      return;
     }
 
-    private void InitializeAltitudeThresholds()
+    if (!node.HasAllChildren())
     {
-        SplitThresholds = new double[MaxDepth + 1];
-        MergeThresholds = new double[MaxDepth + 2];
-
-        for (int zoom = 0; zoom < m_baseAltitudeThresholds.Length; zoom++)
-        {
-            m_baseAltitudeThresholds[zoom] /= 2;
-            SplitThresholds[zoom] = m_baseAltitudeThresholds[zoom];
-        }
-
-        for (int zoom = 1; zoom < m_baseAltitudeThresholds.Length; zoom++)
-        {
-            MergeThresholds[zoom] = SplitThresholds[zoom - 1] * MergeThresholdFactor;
-        }
+      GenerateChildNodes(node);
+      foreach (TerrainQuadTreeNode childNode in node.ChildNodes)
+      {
+        InitializeTerrainNode(childNode);
+      }
     }
 
-    private void ProcessSplitQueue()
+    foreach (TerrainQuadTreeNode childNode in node.ChildNodes)
     {
-        int dequeuesProcessed = 0;
-
-        while (SplitQueueNodes.TryDequeue(out TerrainQuadTreeNode node) &&
-               dequeuesProcessed++ < MaxQueueUpdatesPerFrame)
-        {
-            SplitNode(node);
-        }
+      childNode.IsDeepestVisible = true;
+      childNode.Chunk.Visible = true;
     }
 
-    private void ProcessMergeQueue()
+    node.IsDeepestVisible = false;
+    node.Chunk.Visible = false;
+  }
+
+  private void MergeNodeChildren(TerrainQuadTreeNode parent)
+  {
+    if (!GodotUtils.IsValid(parent))
     {
-        int dequeuesProcessed = 0;
-        while (MergeQueueNodes.TryDequeue(out TerrainQuadTreeNode node) &&
-               dequeuesProcessed++ < MaxQueueUpdatesPerFrame)
-        {
-            MergeNodeChildren(node);
-        }
+      return;
     }
 
-    private void SplitNode(TerrainQuadTreeNode node)
+    parent.Chunk.Visible = true;
+    parent.IsDeepestVisible = true;
+
+    foreach (TerrainQuadTreeNode childNode in parent.ChildNodes)
     {
-        if (!GodotUtils.IsValid(node))
-        {
-            return;
-        }
+      if (GodotUtils.IsValid(childNode))
+      {
+        childNode.Chunk.Visible = false;
+        childNode.IsDeepestVisible = false;
+      }
+    }
+  }
 
-        if (!node.HasAllChildren())
-        {
-            GenerateChildNodes(node);
-            foreach (var childNode in node.ChildNodes)
-            {
-                InitializeTerrainNode(childNode);
-            }
-        }
-
-        foreach (var childNode in node.ChildNodes)
-        {
-            childNode.IsDeepestVisible = true;
-            childNode.Chunk.Visible = true;
-        }
-
-        node.IsDeepestVisible = false;
-        node.Chunk.Visible = false;
+  private void GenerateChildNodes(TerrainQuadTreeNode parentNode)
+  {
+    // todo:: change to logerr
+    if (!GodotUtils.IsValid(parentNode))
+    {
+      throw new ArgumentNullException(nameof(parentNode), "Cannot generate children for a null node.");
     }
 
-    private void MergeNodeChildren(TerrainQuadTreeNode parent)
+    if (!GodotUtils.IsValid(parentNode.Chunk))
     {
-        if (!GodotUtils.IsValid(parent))
-        {
-            return;
-        }
-
-        parent.Chunk.Visible = true;
-        parent.IsDeepestVisible = true;
-
-        foreach (var childNode in parent.ChildNodes)
-        {
-            if (GodotUtils.IsValid(childNode))
-            {
-                childNode.Chunk.Visible = false;
-                childNode.IsDeepestVisible = false;
-            }
-        }
+      throw new ArgumentNullException(nameof(parentNode),
+        "Cannot generate children for a node with a null terrain chunk.");
     }
 
-    private void GenerateChildNodes(TerrainQuadTreeNode parentNode)
+    if (parentNode.Chunk.MapTile == null)
     {
-        // todo:: change to logerr
-        if (!GodotUtils.IsValid(parentNode))
-        {
-            throw new ArgumentNullException(nameof(parentNode), "Cannot generate children for a null node.");
-        }
-
-        if (!GodotUtils.IsValid(parentNode.Chunk))
-        {
-            throw new ArgumentNullException(nameof(parentNode),
-                "Cannot generate children for a node with a null terrain chunk.");
-        }
-
-        if (parentNode.Chunk.MapTile == null)
-        {
-            throw new ArgumentNullException(nameof(parentNode),
-                "Cannot generate children for a node with a null map tile in its terrain chunk.");
-        }
-
-        int parentLatTileCoo = parentNode.Chunk.MapTile.LatitudeTileCoo;
-        int parentLonTileCoo = parentNode.Chunk.MapTile.LongitudeTileCoo;
-        int childZoomLevel = parentNode.Chunk.MapTile.ZoomLevel + 1;
-
-        for (int i = 0; i < 4; i++)
-        {
-            Vector2I childCoos = GetChildTileCoordinates(parentLatTileCoo, parentLonTileCoo, i);
-            TerrainQuadTreeNode newNode = CreateNode(childCoos.Y, childCoos.X, childZoomLevel);
-            newNode.Name =
-                $"TerrainQuadTreeNode_{newNode.Chunk.MapTile.LatitudeTileCoo}_{newNode.Chunk.MapTile.LongitudeTileCoo}";
-            parentNode.ChildNodes[i] = newNode;
-            parentNode.AddChild(newNode);
-        }
+      throw new ArgumentNullException(nameof(parentNode),
+        "Cannot generate children for a node with a null map tile in its terrain chunk.");
     }
 
-    private Vector2I GetChildTileCoordinates(int parentLatTileCoo,
-        int parentLonTileCoo, int childIndex)
+    int parentLatTileCoo = parentNode.Chunk.MapTile.LatitudeTileCoo;
+    int parentLonTileCoo = parentNode.Chunk.MapTile.LongitudeTileCoo;
+    int childZoomLevel = parentNode.Chunk.MapTile.ZoomLevel + 1;
+
+    for (int i = 0; i < 4; i++)
     {
-        // Formula for the tile coordinates of a child specifically in a quadtree structure.
-        // Latitude is along the Y axis (normal cartesian system -- not godot), and longitude the X axis
-        int childLatTileCoo = parentLatTileCoo * 2 + ((childIndex == 2 || childIndex == 3) ? 1 : 0);
-        int childLonTileCoo = parentLonTileCoo * 2 + ((childIndex == 1 || childIndex == 3) ? 1 : 0);
-        return new Vector2I(childLonTileCoo, childLatTileCoo);
+      Vector2I childCoos = GetChildTileCoordinates(parentLatTileCoo, parentLonTileCoo, i);
+      TerrainQuadTreeNode newNode = CreateNode(childCoos.Y, childCoos.X, childZoomLevel);
+      newNode.Name =
+        $"TerrainQuadTreeNode_{newNode.Chunk.MapTile.LatitudeTileCoo}_{newNode.Chunk.MapTile.LongitudeTileCoo}";
+      parentNode.ChildNodes[i] = newNode;
+      parentNode.AddChild(newNode);
     }
+  }
 
-    private TerrainQuadTreeNode CreateNode(int latTileCoo, int lonTileCoo, int zoomLevel)
-    {
-        double childCenterLat = PlanetUtils.ComputeCenterLatitude(MapTileType, latTileCoo, zoomLevel);
-        double childCenterLon = PlanetUtils.ComputeCenterLongitude(MapTileType, lonTileCoo, zoomLevel);
+  private Vector2I GetChildTileCoordinates(int parentLatTileCoo,
+    int parentLonTileCoo, int childIndex)
+  {
+    // Formula for the tile coordinates of a child specifically in a quadtree structure.
+    // Latitude is along the Y axis (normal cartesian system -- not godot), and longitude the X axis
+    int childLatTileCoo = (parentLatTileCoo * 2) + (childIndex == 2 || childIndex == 3 ? 1 : 0);
+    int childLonTileCoo = (parentLonTileCoo * 2) + (childIndex == 1 || childIndex == 3 ? 1 : 0);
+    return new Vector2I(childLonTileCoo, childLatTileCoo);
+  }
 
-        var childChunk =
-            new TerrainChunk(
-                new MapTile(
-                    (float)childCenterLat,
-                    (float)childCenterLon,
-                    zoomLevel,
-                    MapTileType)
-            );
-        childChunk.SetName("TerrainChunk");
+  private TerrainQuadTreeNode CreateNode(int latTileCoo, int lonTileCoo, int zoomLevel)
+  {
+    double childCenterLat = PlanetUtils.ComputeCenterLatitude(MapTileType, latTileCoo, zoomLevel);
+    double childCenterLon = PlanetUtils.ComputeCenterLongitude(MapTileType, lonTileCoo, zoomLevel);
 
-        var terrainQuadTreeNode = new TerrainQuadTreeNode(childChunk, zoomLevel);
+    var childChunk =
+      new TerrainChunk(
+        new MapTile(
+          (float)childCenterLat,
+          (float)childCenterLon,
+          zoomLevel,
+          MapTileType)
+      );
+    childChunk.SetName("TerrainChunk");
 
-        terrainQuadTreeNode.SetName("TerrainQuadTreeNode");
+    var terrainQuadTreeNode = new TerrainQuadTreeNode(childChunk, zoomLevel);
 
-        return terrainQuadTreeNode;
-    }
+    terrainQuadTreeNode.SetName("TerrainQuadTreeNode");
+
+    return terrainQuadTreeNode;
+  }
 }

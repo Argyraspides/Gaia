@@ -1,40 +1,36 @@
-using Godot;
-using System;
 using Gaia.PlanetEngine.LoDSystem;
 using Gaia.PlanetEngine.MapTiles;
+using Godot;
 
 public partial class Earth : Node3D
 {
-    [Export] private bool wireFrameActive = false;
+  [Export] private bool _wireFrameActive;
 
-    private TerrainQuadTree m_terrainQuadTree;
-    private Camera3D m_camera;
-    private MapTileType m_mapTileType;
+  private MapTileType _mapTileType;
 
-    // Use this when instantiating as a scene as the Instantiate<>() function bypasses the constructor
-    public void Construct(Camera3D camera, MapTileType tileType = MapTileType.WEB_MERCATOR_EARTH)
-    {
-        // todo:: code smell ... why tf does the earth need a camera? This should be an exception in the
-        // terrain quad tree...
-        m_camera = camera ?? throw new NullReferenceException("Camera not set!");
-        m_mapTileType = tileType;
-    }
+  private TerrainQuadTree _terrainQuadTree;
 
-    public override void _Process(double delta)
-    {
-        base._Process(delta);
+  // Use this when instantiating as a scene as the Instantiate<>() function bypasses the constructor
+  public void Construct(MainCamera camera, MapTileType tileType = MapTileType.WebMercatorEarth)
+  {
+    _terrainQuadTree = new TerrainQuadTree(camera, _mapTileType);
+    _mapTileType = tileType;
+  }
 
-        RenderingServer.SetDebugGenerateWireframes(wireFrameActive);
-        GetViewport().SetDebugDraw(
-            wireFrameActive ? Viewport.DebugDrawEnum.Wireframe : Viewport.DebugDrawEnum.Disabled);
-    }
+  public override void _Process(double delta)
+  {
+    base._Process(delta);
 
-    public override void _Ready()
-    {
-        base._Ready();
-        m_terrainQuadTree = new TerrainQuadTree(m_camera, m_mapTileType);
-        m_terrainQuadTree.Name = "EarthTerrainQuadTree";
-        AddChild(m_terrainQuadTree);
-        m_terrainQuadTree.InitializeQuadTree(1);
-    }
+    RenderingServer.SetDebugGenerateWireframes(_wireFrameActive);
+    GetViewport().SetDebugDraw(
+      _wireFrameActive ? Viewport.DebugDrawEnum.Wireframe : Viewport.DebugDrawEnum.Disabled);
+  }
+
+  public override void _Ready()
+  {
+    base._Ready();
+    _terrainQuadTree.Name = "EarthTerrainQuadTree";
+    AddChild(_terrainQuadTree);
+    _terrainQuadTree.InitializeQuadTree(1);
+  }
 }

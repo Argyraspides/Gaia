@@ -17,37 +17,39 @@
 */
 
 
-using Godot;
-using System;
 using Gaia.Common.Utils.Godot;
 using Gaia.Common.Utils.Logging;
-using Gaia.PlanetEngine.MapTiles;
+using Godot;
 
 public partial class SolarSystem : WorldEnvironment
 {
-    private Camera3D m_camera;
-    private Earth m_earth;
+  private MainCamera _camera;
+  private Earth _earth;
 
-    public override void _Ready()
+  public override void _Ready()
+  {
+    base._Ready();
+    _camera = GetNode<MainCamera>("MainCamera");
+
+    LoadEarth();
+  }
+
+  private void LoadEarth()
+  {
+    if (!GodotUtils.IsValid(_camera))
     {
-        base._Ready();
-        m_camera = GetNode<Camera3D>("MainCamera");
-
-        LoadEarth();
+      this.LogError("SolarSystem::LoadEarth(): _camera not found!");
+      return;
     }
 
-    private void LoadEarth()
-    {
-        if (!GodotUtils.IsValid(m_camera))
-        {
-            this.LogError("SolarSystem::LoadEarth(): m_camera not found!");
-            return;
-        }
+    PackedScene sceneResource = GD.Load<PackedScene>("res://SolarSystem/Scenes/Earth/Earth.tscn");
+    _earth = sceneResource.Instantiate<Earth>();
 
-        PackedScene sceneResource = GD.Load<PackedScene>("res://SolarSystem/Scenes/Earth/Earth.tscn");
-        m_earth = sceneResource.Instantiate<Earth>();
+    _earth.Construct(_camera);
+    AddChild(_earth);
+  }
 
-        m_earth.Construct(m_camera, MapTileType.WEB_MERCATOR_EARTH);
-        AddChild(m_earth);
-    }
+  private void AdjustCameraSpeed()
+  {
+  }
 }
