@@ -6,11 +6,10 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public partial class LoDCamera : Camera3D
 {
-  public int MaxVisibleDepth { get; set; }
-  public double[] AltitudeThresholds { get; set; }
+  public int MaxVisibleDepth { get; set; } // TODO::GAUGAMELA() This somehow needs to only be visible to TerrainQuadTree
 
   private float _moveSpeed;
-  public float Altitude { get; set; } = float.MaxValue;
+  private float _altitude = float.MaxValue;
   private float _maxAltitude = float.MaxValue;
   private float _minAltitude = 0.0f;
 
@@ -47,7 +46,7 @@ public partial class LoDCamera : Camera3D
 
   private void UpdateProperties()
   {
-    Altitude = GlobalPosition.Y;
+    _altitude = GlobalPosition.Y;
   }
 
   private void ProcessLookAround()
@@ -62,7 +61,7 @@ public partial class LoDCamera : Camera3D
 
   private void ProcessMoveAround(float delta)
   {
-    if (Altitude < _minAltitude)
+    if (_altitude < _minAltitude)
     {
       GlobalPosition = new Vector3(GlobalPosition.X, _minAltitude + 1.0f, GlobalPosition.Z);
       return;
@@ -105,13 +104,13 @@ public partial class LoDCamera : Camera3D
   private void AdjustSpeed()
   {
     float tileWidth = PlanetUtils.EarthEquatorialCircumferenceKm / (1 << MaxVisibleDepth);
-    float maxVisibleRange = 2.0f * Altitude * Mathf.Atan(Fov / 2.0f);
+    float maxVisibleRange = 2.0f * _altitude * Mathf.Atan(Fov / 2.0f);
 
     // Max no. of tiles we can see on-screen
     float tileSpan = maxVisibleRange / tileWidth;
 
     // 2 tiles per second TODO:: polish this shit up
-    _moveSpeed = (2 / tileSpan) * tileWidth * (Altitude / tileWidth) * 10;
+    _moveSpeed = (2 / tileSpan) * tileWidth * (_altitude / tileWidth) * 10;
   }
 
 }

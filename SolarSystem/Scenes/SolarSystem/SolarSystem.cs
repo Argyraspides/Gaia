@@ -17,6 +17,7 @@
 */
 
 
+using System;
 using Gaia.Common.Utils.Godot;
 using Gaia.Common.Utils.Logging;
 using Gaia.PlanetEngine.Utils;
@@ -29,7 +30,6 @@ public partial class SolarSystem : WorldEnvironment
 
   // START CAMERA ============================
   private LoDCamera _camera;
-  private float _cameraSpeedMultiplier = 1.0f;
   // END CAMERA ==============================
 
   // START EARTH =============================
@@ -41,7 +41,6 @@ public partial class SolarSystem : WorldEnvironment
   private double _earthPolarCircumference
     = PlanetUtils.EarthPolarCircumferenceM;
   // END EARTH ===============================
-
 
   public override void _Ready()
   {

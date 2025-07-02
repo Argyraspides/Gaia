@@ -69,6 +69,7 @@ public partial class TerrainQuadTree
 
   private bool ExceedsMaxNodeThreshold()
   {
+    Console.WriteLine($"Current node count: ${GetTree().GetNodesInGroup(_nodeGroupName).Count}");
     return GetTree().GetNodesInGroup(_nodeGroupName).Count >
            _maxNodes *
            _maxNodesCleanupThresholdPercent;

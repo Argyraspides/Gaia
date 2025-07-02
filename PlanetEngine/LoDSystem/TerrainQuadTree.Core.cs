@@ -287,8 +287,6 @@ public sealed partial class TerrainQuadTree : Node3D
     }
   }
 
-  private void InitializeCameraParams(LoDCamera camera) => camera.AltitudeThresholds = _baseAltitudeThresholds;
-
   private void ProcessSplitQueue()
   {
     int dequeuesProcessed = 0;
