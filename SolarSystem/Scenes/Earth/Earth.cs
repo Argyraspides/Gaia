@@ -1,8 +1,9 @@
 using Gaia.PlanetEngine.LoDSystem;
 using Gaia.PlanetEngine.MapTiles;
 using Gaia.PlanetEngine.Utils;
-using Gaia.SolarSystem.Scenes.SolarSystem;
 using Godot;
+
+using LoDCamera = Gaia.PlanetEngine.LoDSystem.LoDCamera;
 
 public partial class Earth : Node3D
 {

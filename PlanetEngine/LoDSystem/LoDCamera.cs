@@ -1,9 +1,8 @@
-using System;
 using Gaia.Common.Utils.Logging;
 using Gaia.PlanetEngine.Utils;
 using Godot;
 
-namespace Gaia.SolarSystem.Scenes.SolarSystem;
+namespace Gaia.PlanetEngine.LoDSystem;
 
 public partial class LoDCamera : Camera3D
 {
@@ -111,7 +110,7 @@ public partial class LoDCamera : Camera3D
     // Max no. of tiles we can see on-screen
     float tileSpan = maxVisibleRange / tileWidth;
 
-    // 2 tiles per second
+    // 2 tiles per second TODO:: polish this shit up
     _moveSpeed = (2 / tileSpan) * tileWidth * (Altitude / tileWidth) * 10;
   }
 

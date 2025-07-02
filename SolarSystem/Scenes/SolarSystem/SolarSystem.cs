@@ -20,8 +20,9 @@
 using Gaia.Common.Utils.Godot;
 using Gaia.Common.Utils.Logging;
 using Gaia.PlanetEngine.Utils;
-using Gaia.SolarSystem.Scenes.SolarSystem;
 using Godot;
+
+using LoDCamera = Gaia.PlanetEngine.LoDSystem.LoDCamera;
 
 public partial class SolarSystem : WorldEnvironment
 {

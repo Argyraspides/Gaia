@@ -26,7 +26,6 @@ using Gaia.InterCom.EventBus;
 using Gaia.PlanetEngine.MapTiles;
 using Gaia.PlanetEngine.MeshGenerators;
 using Gaia.PlanetEngine.Utils;
-using Gaia.SolarSystem.Scenes.SolarSystem;
 using Godot;
 
 namespace Gaia.PlanetEngine.LoDSystem;
@@ -101,34 +100,6 @@ public sealed partial class TerrainQuadTree : Node3D
   private double[] _splitThresholds;
   private double[] _mergeThresholds;
   private double[] _baseAltitudeThresholds;
-
-  // List of maximum distances at each zoom level that you'd have to from the specified object
-  // in order to still resolve a meaningful amount of detail. E.g., at 4000km from Earth, you can resolve
-  // a meaningful amount of detail of Greenlands geographic features, or at 0.005km from Earth, you can resolve
-  // the roof textures on houses to a meaningful level
-  private double[][] _humanThresholdDistances = new double[_maxDepth][]
-  {
-    new double[] { 40000, 15000, 10000, 5000 },       // Zoom 0 – Earth, oceans, continents
-    new double[] { 10000, 8000, 6000 },               // Zoom 1 – Continents, polar caps
-    new double[] { 5000, 4000, 3500 },                // Zoom 2 – Subcontinents, Greenland
-    new double[] { 3000, 2500, 2000 },                // Zoom 3 – Large countries, deserts
-    new double[] { 2000, 1500, 1000 },                // Zoom 4 – Medium countries, rivers
-    new double[] { 1000, 700, 500 },                  // Zoom 5 – Mid-size countries, mega-cities
-    new double[] { 400, 300, 200 },                   // Zoom 6 – City shapes, peninsulas
-    new double[] { 150, 120, 100 },                   // Zoom 7 – Medium cities, airports
-    new double[] { 80, 60, 50 },                      // Zoom 8 – Small cities, urban blocks
-    new double[] { 40, 30, 25 },                      // Zoom 9 – Towns, parks, suburbs
-    new double[] { 15, 10, 8 },                       // Zoom 10 – Neighborhoods, street layout
-    new double[] { 6, 5, 4 },                         // Zoom 11 – Residential grids, local roads
-    new double[] { 3, 2.5, 2 },                       // Zoom 12 – Street blocks, parking lots
-    new double[] { 1.5, 1.2, 1 },                     // Zoom 13 – Buildings, intersections
-    new double[] { 0.8, 0.6, 0.5 },                   // Zoom 14 – Buildings separated, fences
-    new double[] { 0.3, 0.2, 0.15 },                  // Zoom 15 – Car blobs, trees
-    new double[] { 0.1, 0.08, 0.06 },                 // Zoom 16 – Car types, sidewalks
-    new double[] { 0.04, 0.03, 0.025 },               // Zoom 17 – Parked cars, lane markings
-    new double[] { 0.015, 0.01, 0.008 },              // Zoom 18 – Car types, benches, roof outlines
-    new double[] { 0.005, 0.003, 0.002 }              // Zoom 19 – Roof textures, people, tree species
-  };
 
   private List<TerrainQuadTreeNode> _rootNodes;
 
