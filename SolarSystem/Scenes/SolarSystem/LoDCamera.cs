@@ -1,4 +1,5 @@
 using System;
+using Gaia.Common.Utils.Logging;
 using Gaia.PlanetEngine.Utils;
 using Godot;
 
@@ -12,13 +13,18 @@ public partial class LoDCamera : Camera3D
   private float _moveSpeed;
   public float Altitude { get; set; } = float.MaxValue;
   private float _maxAltitude = float.MaxValue;
-  private float _minAltitude;
+  private float _minAltitude = 0.0f;
 
   private float _pitch;
   private float _pitchSpeed = 0.001f;
 
   private float _yaw;
   private float _yawSpeed = 0.001f;
+
+  public override void _Ready()
+  {
+    this.RegisterLogging(true);
+  }
 
 
   public override void _Input(InputEvent @event)
@@ -35,8 +41,14 @@ public partial class LoDCamera : Camera3D
   {
     base._Process(delta);
     ProcessMoveAround((float)delta);
-    AdjustSpeed((float)delta);
+    AdjustSpeed();
+    UpdateProperties();
     // ProcessLookAround();
+  }
+
+  private void UpdateProperties()
+  {
+    Altitude = GlobalPosition.Y;
   }
 
   private void ProcessLookAround()
@@ -51,6 +63,12 @@ public partial class LoDCamera : Camera3D
 
   private void ProcessMoveAround(float delta)
   {
+    if (Altitude < _minAltitude)
+    {
+      GlobalPosition = new Vector3(GlobalPosition.X, _minAltitude + 1.0f, GlobalPosition.Z);
+      return;
+    }
+
     // WASD
     if (Input.IsActionPressed("ui_forward"))
     {
@@ -85,7 +103,7 @@ public partial class LoDCamera : Camera3D
     }
   }
 
-  private void AdjustSpeed(float delta)
+  private void AdjustSpeed()
   {
     float tileWidth = PlanetUtils.EarthEquatorialCircumferenceKm / (1 << MaxVisibleDepth);
     float maxVisibleRange = 2.0f * Altitude * Mathf.Atan(Fov / 2.0f);
@@ -94,11 +112,8 @@ public partial class LoDCamera : Camera3D
     float tileSpan = maxVisibleRange / tileWidth;
 
     // 2 tiles per second
-    _moveSpeed = (2 / tileSpan) * tileWidth;
+    _moveSpeed = (2 / tileSpan) * tileWidth * (Altitude / tileWidth) * 10;
   }
-
-  private void DetermineAltitude()
-  {}
 
 }
 

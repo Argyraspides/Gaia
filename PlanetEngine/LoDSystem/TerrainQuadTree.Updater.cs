@@ -99,8 +99,7 @@ public partial class TerrainQuadTree
     // TODO:: should this be done here??? Awkward spot to update camera info ...
     if (shouldSplit)
     {
-      _lodCamera.MaxVisibleDepth = node.Depth + 1;
-      _lodCamera.Altitude = Math.Min(_lodCamera.Altitude, distanceToCamera);
+      _lodCamera.MaxVisibleDepth = Math.Max(node.Depth + 1, _lodCamera.MaxVisibleDepth);
     }
 
     return shouldSplit;
@@ -130,11 +129,10 @@ public partial class TerrainQuadTree
     // TODO:: should this be done here??? Awkward spot to update camera info ...
     if (shouldMerge)
     {
-      _lodCamera.MaxVisibleDepth =  node.Depth - 1;
+      _lodCamera.MaxVisibleDepth = Math.Max(node.Depth - 1, _lodCamera.MaxVisibleDepth);
       // TODO:: This is NOT accurate altitude. Fix later when you introduce raycasting!
       // We could be merging a node that is NOT directly underneat the camera thus we get
       // an altitude at a weird angle to the ground rather than perpendicular.
-      _lodCamera.Altitude = Math.Max(_lodCamera.Altitude, distanceToCamera);
     }
 
     return shouldMerge;

@@ -33,6 +33,38 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public sealed partial class TerrainQuadTree : Node3D
 {
+
+  public TerrainQuadTree() { /* Godot needs an empty constructor */ }
+
+  public TerrainQuadTree(
+    LoDCamera camera,
+    MapTileType tileType,
+    int maxNodes = 10000,
+    float worldSizeLat = PlanetUtils.EarthPolarCircumferenceKm,
+    float worldSizeLon = PlanetUtils.EarthEquatorialCircumferenceKm)
+  {
+    if (maxNodes <= 0)
+    {
+      throw new ArgumentException("maxNodes must be positive");
+    }
+
+    if (tileType == MapTileType.Unknown)
+    {
+      throw new ArgumentException("Cannot make a LoD system with an unknown map tile type!");
+    }
+
+    _lodCamera = camera ?? throw new ArgumentNullException("TerrainQuadTree needs a camera!");
+    _maxNodes = maxNodes;
+    _mapTileType = tileType;
+    _worldSizePolar = worldSizeLat;
+    _worldSizeEquatorial = worldSizeLon;
+
+    InitializeAltitudeThresholds();
+    QuadTreeLoaded += GlobalEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
+    this.RegisterLogging(true);
+  }
+
+
   [Signal]
   public delegate void QuadTreeLoadedEventHandler();
 
@@ -53,57 +85,13 @@ public sealed partial class TerrainQuadTree : Node3D
   private ConcurrentQueue<TerrainQuadTreeNode> _mergeQueueNodes = new();
   private ConcurrentQueue<TerrainQuadTreeNode> _splitQueueNodes = new();
 
-  public TerrainQuadTree() { /* Godot needs an empty constructor */ }
-
-  public TerrainQuadTree(
-    LoDCamera camera,
-    MapTileType tileType,
-    int maxNodes = 10000,
-    int minDepth = 0,
-    int maxDepth = 20,
-    float worldSizeLat = PlanetUtils.EarthPolarCircumferenceKm,
-    float worldSizeLon = PlanetUtils.EarthEquatorialCircumferenceKm)
-  {
-    if (maxDepth > _maxDepthLimit || maxDepth < _minDepthLimit)
-    {
-      throw new ArgumentException($"maxDepth must be between {_minDepthLimit} and {_maxDepthLimit}");
-    }
-
-    if (maxDepth < minDepth)
-    {
-      throw new ArgumentException("maxDepth must be greater than minDepth");
-    }
-
-    if (maxNodes <= 0)
-    {
-      throw new ArgumentException("maxNodes must be positive");
-    }
-
-    if (tileType == MapTileType.Unknown)
-    {
-      throw new ArgumentException("Cannot make a LoD system with an unknown map tile type!");
-    }
-
-    _lodCamera = camera ?? throw new ArgumentNullException("TerrainQuadTree needs a camera!");
-    _maxNodes = maxNodes;
-    _minDepth = minDepth;
-    _maxDepth = maxDepth;
-    _mapTileType = tileType;
-    _worldSizePolar = worldSizeLat;
-    _worldSizeEquatorial = worldSizeLon;
-
-    InitializeAltitudeThresholds();
-    QuadTreeLoaded += GlobalEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
-    this.RegisterLogging(true);
-  }
-
   // Size of the world this quadtree handles in the directions of latitude/longitude
   // of said world. E.g., Earth as a globe has WorldSizeLatKm as the circumference along lines of longitude
   private double _worldSizePolar;
   private double _worldSizeEquatorial;
 
-  private int _maxDepth;
-  private int _minDepth;
+  private const int _maxDepth = 20;
+  private const int _minDepth = 0;
   private int _initDepth; // Depth we started at
 
   private MapTileType _mapTileType;
@@ -113,6 +101,34 @@ public sealed partial class TerrainQuadTree : Node3D
   private double[] _splitThresholds;
   private double[] _mergeThresholds;
   private double[] _baseAltitudeThresholds;
+
+  // List of maximum distances at each zoom level that you'd have to from the specified object
+  // in order to still resolve a meaningful amount of detail. E.g., at 4000km from Earth, you can resolve
+  // a meaningful amount of detail of Greenlands geographic features, or at 0.005km from Earth, you can resolve
+  // the roof textures on houses to a meaningful level
+  private double[][] _humanThresholdDistances = new double[_maxDepth][]
+  {
+    new double[] { 40000, 15000, 10000, 5000 },       // Zoom 0 – Earth, oceans, continents
+    new double[] { 10000, 8000, 6000 },               // Zoom 1 – Continents, polar caps
+    new double[] { 5000, 4000, 3500 },                // Zoom 2 – Subcontinents, Greenland
+    new double[] { 3000, 2500, 2000 },                // Zoom 3 – Large countries, deserts
+    new double[] { 2000, 1500, 1000 },                // Zoom 4 – Medium countries, rivers
+    new double[] { 1000, 700, 500 },                  // Zoom 5 – Mid-size countries, mega-cities
+    new double[] { 400, 300, 200 },                   // Zoom 6 – City shapes, peninsulas
+    new double[] { 150, 120, 100 },                   // Zoom 7 – Medium cities, airports
+    new double[] { 80, 60, 50 },                      // Zoom 8 – Small cities, urban blocks
+    new double[] { 40, 30, 25 },                      // Zoom 9 – Towns, parks, suburbs
+    new double[] { 15, 10, 8 },                       // Zoom 10 – Neighborhoods, street layout
+    new double[] { 6, 5, 4 },                         // Zoom 11 – Residential grids, local roads
+    new double[] { 3, 2.5, 2 },                       // Zoom 12 – Street blocks, parking lots
+    new double[] { 1.5, 1.2, 1 },                     // Zoom 13 – Buildings, intersections
+    new double[] { 0.8, 0.6, 0.5 },                   // Zoom 14 – Buildings separated, fences
+    new double[] { 0.3, 0.2, 0.15 },                  // Zoom 15 – Car blobs, trees
+    new double[] { 0.1, 0.08, 0.06 },                 // Zoom 16 – Car types, sidewalks
+    new double[] { 0.04, 0.03, 0.025 },               // Zoom 17 – Parked cars, lane markings
+    new double[] { 0.015, 0.01, 0.008 },              // Zoom 18 – Car types, benches, roof outlines
+    new double[] { 0.005, 0.003, 0.002 }              // Zoom 19 – Roof textures, people, tree species
+  };
 
   private List<TerrainQuadTreeNode> _rootNodes;
 
@@ -127,7 +143,6 @@ public sealed partial class TerrainQuadTree : Node3D
   public override void _Process(double delta)
   {
     _cameraPosition = _lodCamera.GlobalPosition;
-    this.LogInfo($"Current altitude of camera: {_lodCamera.Altitude}");
     if (_canUpdateQuadTree.IsSet)
     {
       ProcessSplitQueue();
@@ -276,17 +291,18 @@ public sealed partial class TerrainQuadTree : Node3D
 
   private void InitializeAltitudeThresholds()
   {
-    _baseAltitudeThresholds = new double[_maxDepth + 1];
+    _baseAltitudeThresholds = new double[_maxDepth]
+    {
+      156000.0f, 78000.0f, 39000.0f, 19500.0f, 9750.0f, 4875.0f, 2437.5f, 1218.75f, 609.375f, 304.6875f, 152.34f,
+      76.17f, 38.08f, 19.04f, 9.52f, 4.76f, 2.38f, 1.2f, 0.6f, 0.35f
+    };
+
     _splitThresholds = new double[_maxDepth + 1];
     _mergeThresholds = new double[_maxDepth + 2];
 
-    for (int zoom = 0; zoom < _baseAltitudeThresholds.Length; zoom++)
+    for (int i = 0; i < _baseAltitudeThresholds.Length; i++)
     {
-      // TODO:: This needs to be improved
-      // Set the split/merge thresholds as the distance each tile represents at any zoom level along
-      // lines of latitude. This is clean for now but isn't optimal for viewing IMO.
-      // Really try and mimic human vision when splitting/merging!
-      _baseAltitudeThresholds[zoom] = PlanetUtils.EarthEquatorialCircumferenceKm / (1 << zoom);
+      _baseAltitudeThresholds[i] /= 2;
     }
 
     for (int zoom = 0; zoom < _baseAltitudeThresholds.Length; zoom++)
