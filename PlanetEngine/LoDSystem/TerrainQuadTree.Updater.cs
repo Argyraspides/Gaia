@@ -22,7 +22,6 @@ using Gaia.Common.Utils.Godot;
 using Godot;
 
 namespace Gaia.PlanetEngine.LoDSystem;
-// TODO:: lod camera should be owned by LOD system.
 public partial class TerrainQuadTree
 {
   private const int _threadJoinTimeoutMs = 1000;
@@ -94,15 +93,8 @@ public partial class TerrainQuadTree
     }
 
     float distanceToCamera = node.GlobalPositionCpy.DistanceTo(_cameraPosition);
-    bool shouldSplit = _splitThresholds[node.Depth] > distanceToCamera;
 
-    // TODO:: should this be done here??? Awkward spot to update camera info ...
-    if (shouldSplit)
-    {
-      _lodCamera.MaxVisibleDepth = Math.Max(node.Depth + 1, _lodCamera.MaxVisibleDepth);
-    }
-
-    return shouldSplit;
+    return _splitThresholds[node.Depth] > distanceToCamera;
   }
 
   // Should we merge back into our parent?
@@ -124,18 +116,8 @@ public partial class TerrainQuadTree
     }
 
     float distanceToCamera = node.GlobalPositionCpy.DistanceTo(_cameraPosition);
-    bool shouldMerge = _mergeThresholds[node.Depth] < distanceToCamera;
 
-    // TODO:: should this be done here??? Awkward spot to update camera info ...
-    if (shouldMerge)
-    {
-      _lodCamera.MaxVisibleDepth = Math.Max(node.Depth - 1, _lodCamera.MaxVisibleDepth);
-      // TODO:: This is NOT accurate altitude. Fix later when you introduce raycasting!
-      // We could be merging a node that is NOT directly underneat the camera thus we get
-      // an altitude at a weird angle to the ground rather than perpendicular.
-    }
-
-    return shouldMerge;
+    return _mergeThresholds[node.Depth] < distanceToCamera;
   }
 
   private bool ShouldMergeChildren(TerrainQuadTreeNode parentNode)

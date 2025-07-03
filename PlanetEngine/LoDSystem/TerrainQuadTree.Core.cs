@@ -39,6 +39,8 @@ public sealed partial class TerrainQuadTree : Node3D
     LoDCamera camera,
     MapTileType tileType,
     int maxNodes = 10000,
+    // TODO::GAUGAMELA() { Wait bruh this might be a problem for mercator coz its just meant to be nxn tiles lmao
+    // a square not this oblated crap }
     float worldSizeLat = PlanetUtils.EarthPolarCircumferenceKm,
     float worldSizeLon = PlanetUtils.EarthEquatorialCircumferenceKm)
   {
@@ -69,7 +71,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
   private const int _maxQueueUpdatesPerFrame = 50;
 
-  private const float _mergeThresholdFactor = 1.15F;
+  private const float _mergeThresholdFactor = 1.5F;
 
   private const int _maxDepthLimit = 23;
   private const int _minDepthLimit = 1;
@@ -267,6 +269,8 @@ public sealed partial class TerrainQuadTree : Node3D
       156000.0f, 78000.0f, 39000.0f, 19500.0f, 9750.0f, 4875.0f, 2437.5f, 1218.75f, 609.375f, 304.6875f, 152.34f,
       76.17f, 38.08f, 19.04f, 9.52f, 4.76f, 2.38f, 1.2f, 0.6f, 0.35f
     };
+
+    _lodCamera.AltitudeThresholds = _baseAltitudeThresholds;
 
     _splitThresholds = new double[_maxDepth + 1];
     _mergeThresholds = new double[_maxDepth + 2];

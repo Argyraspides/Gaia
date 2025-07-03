@@ -28,19 +28,13 @@ using LoDCamera = Gaia.PlanetEngine.LoDSystem.LoDCamera;
 public partial class SolarSystem : WorldEnvironment
 {
 
-  // START CAMERA ============================
   private LoDCamera _camera;
-  // END CAMERA ==============================
 
-  // START EARTH =============================
   private Earth _earth;
-
   private double _earthEquatorialCircumference
     = PlanetUtils.EarthEquatorialCircumferenceKm;
-
   private double _earthPolarCircumference
     = PlanetUtils.EarthPolarCircumferenceM;
-  // END EARTH ===============================
 
   public override void _Ready()
   {

@@ -18,12 +18,12 @@ sky = SubResource("Sky_bhxmi")
 environment = SubResource("Environment_xash6")
 script = ExtResource("2_obgtn")
 
-[node name="Sun" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 150000, 0)
-light_energy = 100000.0
-omni_range = 200000.0
-
 [node name="LoDCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 10000, 0)
-far = 70000.0
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 1e+06, 0)
+far = 700000.0
 script = ExtResource("3_jbp3p")
+
+[node name="Sun" type="OmniLight3D" parent="LoDCamera"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+light_energy = 10000.0
+omni_range = 2e+07
