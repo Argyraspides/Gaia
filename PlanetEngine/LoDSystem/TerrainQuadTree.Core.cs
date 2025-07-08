@@ -127,6 +127,44 @@ public sealed partial class TerrainQuadTree : Node3D
       _canUpdateQuadTree.Reset();
       _canPerformCulling.Set();
     }
+
+    _lodCamera.UpdateGroundRef(GlobalPosition.Y);
+
+    float visibleWidth = 2.0f * _lodCamera._altitude * Mathf.Atan(Mathf.DegToRad(_lodCamera.Fov) / 2.0f);
+    float _moveSpeed = visibleWidth / 2.0f;
+
+    // WASD
+    if (Input.IsActionPressed("ui_forward"))
+    {
+      Transform = Transform.Translated(Vector3.Forward * _moveSpeed * (float)delta);
+    }
+
+    if (Input.IsActionPressed("ui_backward"))
+    {
+      Transform = Transform.Translated(Vector3.Back * _moveSpeed * (float)delta);
+    }
+
+    if (Input.IsActionPressed("ui_left"))
+    {
+      Transform = Transform.Translated(Vector3.Left * _moveSpeed * (float)delta);
+    }
+
+    if (Input.IsActionPressed("ui_right"))
+    {
+      Transform = Transform.Translated(Vector3.Right * _moveSpeed * (float)delta);
+    }
+
+    // Shift
+    if (Input.IsActionPressed("ui_crouch"))
+    {
+      Transform = Transform.Translated(Vector3.Down * _moveSpeed * (float)delta);
+    }
+
+    // Space
+    if (Input.IsActionPressed("ui_up"))
+    {
+      Transform = Transform.Translated(Vector3.Up * _moveSpeed * (float)delta);
+    }
   }
 
   public override void _ExitTree()

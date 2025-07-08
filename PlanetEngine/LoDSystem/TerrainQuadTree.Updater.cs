@@ -92,7 +92,8 @@ public partial class TerrainQuadTree
       return false;
     }
 
-    float distanceToCamera = node.GlobalPositionCpy.DistanceTo(_cameraPosition);
+    // float distanceToCamera = node.GlobalPositionCpy.DistanceTo(_cameraPosition);
+    float distanceToCamera = node.GlobalPosition.DistanceTo(_cameraPosition);
 
     return _splitThresholds[node.Depth] > distanceToCamera;
   }
@@ -115,7 +116,8 @@ public partial class TerrainQuadTree
       return false;
     }
 
-    float distanceToCamera = node.GlobalPositionCpy.DistanceTo(_cameraPosition);
+    // float distanceToCamera = node.GlobalPositionCpy.DistanceTo(_cameraPosition);
+    float distanceToCamera = node.GlobalPosition.DistanceTo(_cameraPosition);
 
     return _mergeThresholds[node.Depth] < distanceToCamera;
   }

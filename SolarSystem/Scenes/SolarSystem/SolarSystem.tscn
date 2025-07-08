@@ -19,11 +19,9 @@ environment = SubResource("Environment_xash6")
 script = ExtResource("2_obgtn")
 
 [node name="LoDCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 1e+06, 0)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 100000, 0)
 far = 700000.0
 script = ExtResource("3_jbp3p")
 
-[node name="Sun" type="OmniLight3D" parent="LoDCamera"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
-light_energy = 10000.0
-omni_range = 2e+07
+[node name="Sun" type="DirectionalLight3D" parent="LoDCamera"]
+directional_shadow_max_distance = 10000.0

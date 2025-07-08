@@ -77,6 +77,8 @@ public partial class TerrainChunk : Node3D
   private void ApplyTexture(Texture2D texture2D)
   {
     var standardShader = new StandardMaterial3D();
+    standardShader.TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest;
+
     standardShader.AlbedoTexture = texture2D;
     if (!GodotUtils.IsValid(TerrainChunkMesh))
     {
