@@ -11,7 +11,6 @@ public partial class LoDCamera : Camera3D
   public double[] AltitudeThresholds { private get; set; }
 
   private float _moveSpeed;
-  private float _groundRef;
   public float _altitude = float.MaxValue;
   private float _maxAltitude = float.MaxValue;
   private float _minAltitude = 0.0f;
@@ -31,12 +30,6 @@ public partial class LoDCamera : Camera3D
 
   public override void _Input(InputEvent @event)
   {
-    // base._Input(@event);
-    // if (@event is InputEventMouseMotion mouseMotion)
-    // {
-    //     _yaw -= mouseMotion.Relative.X * _yawSpeed;
-    //     _pitch -= mouseMotion.Relative.Y * _pitchSpeed;
-    // }
   }
 
   public override void _Process(double delta)
@@ -45,22 +38,11 @@ public partial class LoDCamera : Camera3D
     ProcessMoveAround((float)delta);
     AdjustSpeed();
     UpdateProperties();
-    // ProcessLookAround();
   }
 
   private void UpdateProperties()
   {
-    _altitude = GlobalPosition.Y - _groundRef;
-  }
-
-  private void ProcessLookAround()
-  {
-    Transform3D transform = Transform;
-    transform.Basis = Basis.Identity;
-    Transform = transform;
-
-    RotateObjectLocal(Vector3.Up, _yaw);
-    RotateObjectLocal(Vector3.Right, _pitch);
+    _altitude = GlobalPosition.Y;
   }
 
   private void ProcessMoveAround(float delta)
@@ -69,6 +51,46 @@ public partial class LoDCamera : Camera3D
     {
       GlobalPosition = new Vector3(GlobalPosition.X, _minAltitude + 1.0f, GlobalPosition.Z);
       return;
+    }
+
+    float visibleWidth = 2.0f * _altitude * Mathf.Atan(Mathf.DegToRad(Fov) / 2.0f);
+    float _moveSpeed = visibleWidth / 2.0f;
+
+    // Shift
+    if (Input.IsActionPressed("ui_crouch"))
+    {
+      Transform = Transform.Translated(Vector3.Down * _moveSpeed * (float)delta);
+    }
+
+    // Space
+    if (Input.IsActionPressed("ui_up"))
+    {
+      Transform = Transform.Translated(Vector3.Up * _moveSpeed * (float)delta);
+    }
+
+    // WASD
+    if (Input.IsActionPressed("ui_forward"))
+    {
+      Vector3 newOffset = Vector3.Forward * _moveSpeed * (float)delta;
+      Transform = Transform.Translated(newOffset);
+    }
+
+    if (Input.IsActionPressed("ui_backward"))
+    {
+      Vector3 newOffset = Vector3.Back * _moveSpeed * (float)delta;
+      Transform = Transform.Translated(newOffset);
+    }
+
+    if (Input.IsActionPressed("ui_left"))
+    {
+      Vector3 newOffset = Vector3.Left * _moveSpeed * (float)delta;
+      Transform = Transform.Translated(newOffset);
+    }
+
+    if (Input.IsActionPressed("ui_right"))
+    {
+      Vector3 newOffset = Vector3.Right * _moveSpeed * (float)delta;
+      Transform = Transform.Translated(newOffset);
     }
   }
 
@@ -86,11 +108,6 @@ public partial class LoDCamera : Camera3D
 
     float visibleWidth = 2.0f * _altitude * Mathf.Atan(Mathf.DegToRad(Fov) / 2.0f);
     _moveSpeed = visibleWidth / 2.0f;
-  }
-
-  public void UpdateGroundRef(float y)
-  {
-    _groundRef = y;
   }
 
 }

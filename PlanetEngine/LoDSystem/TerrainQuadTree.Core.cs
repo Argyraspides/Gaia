@@ -39,10 +39,11 @@ public sealed partial class TerrainQuadTree : Node3D
     LoDCamera camera,
     MapTileType tileType,
     int maxNodes = 10000,
+    double worldScale = 1.0f,
     // TODO::GAUGAMELA() { Wait bruh this might be a problem for mercator coz its just meant to be nxn tiles lmao
     // a square not this oblated crap }
-    float worldSizeLat = PlanetUtils.EarthPolarCircumferenceKm,
-    float worldSizeLon = PlanetUtils.EarthEquatorialCircumferenceKm)
+    double worldSizeLat = PlanetUtils.EarthPolarCircumferenceKm,
+    double worldSizeLon = PlanetUtils.EarthEquatorialCircumferenceKm)
   {
     if (maxNodes <= 0)
     {
@@ -54,11 +55,15 @@ public sealed partial class TerrainQuadTree : Node3D
       throw new ArgumentException("Cannot make a LoD system with an unknown map tile type!");
     }
 
+    worldSizeLat *= worldScale;
+    worldSizeLon *= worldScale;
+
     _lodCamera = camera ?? throw new ArgumentNullException("TerrainQuadTree needs a camera!");
     _maxNodes = maxNodes;
     _mapTileType = tileType;
     _worldSizePolar = worldSizeLat;
     _worldSizeEquatorial = worldSizeLon;
+    _worldScale = worldScale;
 
     InitializeAltitudeThresholds();
     QuadTreeLoaded += GlobalEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
@@ -79,7 +84,6 @@ public sealed partial class TerrainQuadTree : Node3D
   private const string _nodeGroupName = "TerrainQuadTreeNodes";
   private readonly LoDCamera _lodCamera;
 
-
   private readonly ManualResetEventSlim _canUpdateQuadTree = new(false);
 
   private bool _quadTreeLoaded;
@@ -90,6 +94,9 @@ public sealed partial class TerrainQuadTree : Node3D
   // of said world. E.g., Earth as a globe has WorldSizeLatKm as the circumference along lines of longitude
   private double _worldSizePolar;
   private double _worldSizeEquatorial;
+  private double _worldScale;
+
+  private Vector3 _currOffset = new Vector3(0,0,0);
 
   private const int _maxDepth = 20;
   private const int _minDepth = 0;
@@ -115,6 +122,9 @@ public sealed partial class TerrainQuadTree : Node3D
 
   public override void _Process(double delta)
   {
+
+    // this.LogInfo($"_currOffset: {_currOffset}");
+
     _cameraPosition = _lodCamera.GlobalPosition;
     if (_canUpdateQuadTree.IsSet)
     {
@@ -128,43 +138,6 @@ public sealed partial class TerrainQuadTree : Node3D
       _canPerformCulling.Set();
     }
 
-    _lodCamera.UpdateGroundRef(GlobalPosition.Y);
-
-    float visibleWidth = 2.0f * _lodCamera._altitude * Mathf.Atan(Mathf.DegToRad(_lodCamera.Fov) / 2.0f);
-    float _moveSpeed = visibleWidth / 2.0f;
-
-    // WASD
-    if (Input.IsActionPressed("ui_forward"))
-    {
-      Transform = Transform.Translated(Vector3.Forward * _moveSpeed * (float)delta);
-    }
-
-    if (Input.IsActionPressed("ui_backward"))
-    {
-      Transform = Transform.Translated(Vector3.Back * _moveSpeed * (float)delta);
-    }
-
-    if (Input.IsActionPressed("ui_left"))
-    {
-      Transform = Transform.Translated(Vector3.Left * _moveSpeed * (float)delta);
-    }
-
-    if (Input.IsActionPressed("ui_right"))
-    {
-      Transform = Transform.Translated(Vector3.Right * _moveSpeed * (float)delta);
-    }
-
-    // Shift
-    if (Input.IsActionPressed("ui_crouch"))
-    {
-      Transform = Transform.Translated(Vector3.Down * _moveSpeed * (float)delta);
-    }
-
-    // Space
-    if (Input.IsActionPressed("ui_up"))
-    {
-      Transform = Transform.Translated(Vector3.Up * _moveSpeed * (float)delta);
-    }
   }
 
   public override void _ExitTree()
@@ -294,8 +267,7 @@ public sealed partial class TerrainQuadTree : Node3D
     double zCoo = -((_worldSizePolar / 2) - ((latCoo + 0.5f) * trueTileHeight));
 
     node.Chunk.Scale = new Vector3((float)trueTileWidth, 1, (float)trueTileHeight);
-    node.GlobalPosition = new Vector3((float)xCoo, 0.0f, (float)zCoo);
-    node.GlobalPositionCpy = node.GlobalPosition;
+    node.GlobalPosition = new Vector3((float)xCoo + _currOffset.X, 0.0f, (float)zCoo + _currOffset.Z);
   }
 
   private void PositionTerrainNodeGlobe(TerrainQuadTreeNode node) => throw new NotImplementedException();
@@ -315,7 +287,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
     for (int i = 0; i < _baseAltitudeThresholds.Length; i++)
     {
-      _baseAltitudeThresholds[i] /= 2;
+      _baseAltitudeThresholds[i] *= _worldScale * 0.5f;
     }
 
     for (int zoom = 0; zoom < _baseAltitudeThresholds.Length; zoom++)

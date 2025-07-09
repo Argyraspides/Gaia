@@ -66,4 +66,10 @@ public sealed partial class TerrainQuadTreeNode : Node3D
 
     return true;
   }
+
+  public override void _Process(double delta)
+  {
+    base._Process(delta);
+    GlobalPositionCpy = GlobalPosition;
+  }
 }
