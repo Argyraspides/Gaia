@@ -5,7 +5,3 @@
 # JetBrains/VSCode
 .vscode/
 .idea/
-
-# Any asset folders
-**/Assets
-**/Fonts
