@@ -32,13 +32,12 @@ public partial class LoDCamera : Camera3D
   private float _yaw;
   private float _yawSpeed = 0.001f;
 
+  private bool _isDragging;
+  private Vector2 _lastMousePos;
+
   public override void _Ready()
   {
     Logger.RegisterLogging(this, true);
-  }
-
-  public override void _Input(InputEvent @event)
-  {
   }
 
   public override void _Process(double delta)
@@ -47,6 +46,31 @@ public partial class LoDCamera : Camera3D
     ProcessMoveAround((float)delta);
     AdjustSpeed();
     UpdateProperties();
+  }
+
+  public override void _Input(InputEvent @event)
+  {
+    if (@event is InputEventMouseButton mouseButton)
+    {
+      _isDragging = mouseButton.Pressed;
+      return;
+    }
+
+    if (@event is InputEventMouseMotion mouseMotion)
+    {
+      if (_isDragging)
+      {
+        Vector2 deltaPos = _lastMousePos - mouseMotion.Position;
+        _lastMousePos = mouseMotion.Position;
+        float verticalFov = Mathf.DegToRad(Fov);
+        float horizontalFov = 2 * Mathf.Atan(Mathf.Tan(verticalFov / 2) * ( GetViewport().GetVisibleRect().Size.X / GetViewport().GetVisibleRect().Size.Y ));
+        float realXCooPerPixel = _altitude * (Mathf.Tan(horizontalFov / 2) / GetViewport().GetVisibleRect().Size.X);
+        float realYCooPerPixel = _altitude * (Mathf.Tan(verticalFov / 2) / GetViewport().GetVisibleRect().Size.Y);
+        float xCooMove = deltaPos.X * realXCooPerPixel;
+        float yCooMove = deltaPos.Y * realYCooPerPixel;
+        Position = new Vector3(Position.X + xCooMove, Position.Y, Position.Z + yCooMove);
+      }
+    }
   }
 
   private void UpdateProperties()
