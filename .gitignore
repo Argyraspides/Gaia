@@ -5,14 +5,3 @@
 # JetBrains/VSCode
 .vscode/
 .idea/
-
-# Asset files
-*.png
-*.jpeg
-*.jpg
-*.tff
-
-*.png.uid
-*.jpeg.uid
-*.jpg.uid
-*.tff.uid
