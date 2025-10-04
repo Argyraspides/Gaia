@@ -40,7 +40,7 @@ public sealed partial class TerrainQuadTree : Node3D
     MapTileType tileType,
     int maxNodes = 10000,
     double worldScale = 1.0f,
-    // TODO::GAUGAMELA() { Wait bruh this might be a problem for mercator coz its just meant to be nxn tiles lmao
+    // TODO::ARGYRASPIDES() { Wait bruh this might be a problem for mercator coz its just meant to be nxn tiles lmao
     // a square not this oblated crap }
     double worldSizeLat = PlanetUtils.EarthPolarCircumferenceKm,
     double worldSizeLon = PlanetUtils.EarthEquatorialCircumferenceKm)
