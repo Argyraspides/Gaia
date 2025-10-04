@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://jx85jkv3glfj"
-path="res://.godot/imported/Jura-Light.ttf-430f85b082cbfba367ec81cdcbde7f79.fontdata"
+path="res://.godot/imported/Jura-Light.ttf-342e00cdcc0245c84021de0eba3f6eb6.fontdata"
 
 [deps]
 
-source_file="res://Common/UI/Fonts/Jura/Jura-Light.ttf"
-dest_files=["res://.godot/imported/Jura-Light.ttf-430f85b082cbfba367ec81cdcbde7f79.fontdata"]
+source_file="res://UI/Fonts/Jura/Jura-Light.ttf"
+dest_files=["res://.godot/imported/Jura-Light.ttf-342e00cdcc0245c84021de0eba3f6eb6.fontdata"]
 
 [params]
 

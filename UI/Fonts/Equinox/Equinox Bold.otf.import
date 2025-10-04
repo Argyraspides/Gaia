@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://0tmsqxq6fu1c"
-path="res://.godot/imported/Equinox Bold.otf-f45451ecfa0c9711c43a4bf413d6135d.fontdata"
+path="res://.godot/imported/Equinox Bold.otf-c33c79f25cbd6a04d1906285a9d806ef.fontdata"
 
 [deps]
 
-source_file="res://Common/UI/Fonts/Equinox/Equinox Bold.otf"
-dest_files=["res://.godot/imported/Equinox Bold.otf-f45451ecfa0c9711c43a4bf413d6135d.fontdata"]
+source_file="res://UI/Fonts/Equinox/Equinox Bold.otf"
+dest_files=["res://.godot/imported/Equinox Bold.otf-c33c79f25cbd6a04d1906285a9d806ef.fontdata"]
 
 [params]
 

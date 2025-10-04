@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://bkf5xgdkkywid"
-path="res://.godot/imported/Jura-Medium.ttf-f600b665e3e6905f09cc55e009332be5.fontdata"
+uid="uid://5b8ak2cftiaj"
+path="res://.godot/imported/Jura-SemiBold.ttf-455ed33ed9dbb72dda768bcde03e66f7.fontdata"
 
 [deps]
 
-source_file="res://Common/UI/Fonts/Jura/Jura-Medium.ttf"
-dest_files=["res://.godot/imported/Jura-Medium.ttf-f600b665e3e6905f09cc55e009332be5.fontdata"]
+source_file="res://UI/Fonts/Jura/Jura-SemiBold.ttf"
+dest_files=["res://.godot/imported/Jura-SemiBold.ttf-455ed33ed9dbb72dda768bcde03e66f7.fontdata"]
 
 [params]
 

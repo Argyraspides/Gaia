@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://b2phl33x2w1n"
-path="res://.godot/imported/Equinox Regular.otf-4c43545b829ba062c69e642cf407a7f0.fontdata"
+uid="uid://r4alo7kybwp8"
+path="res://.godot/imported/Jura-Regular.ttf-62d29b46673e0192a9deafa2eeea9c39.fontdata"
 
 [deps]
 
-source_file="res://Common/UI/Fonts/Equinox/Equinox Regular.otf"
-dest_files=["res://.godot/imported/Equinox Regular.otf-4c43545b829ba062c69e642cf407a7f0.fontdata"]
+source_file="res://UI/Fonts/Jura/Jura-Regular.ttf"
+dest_files=["res://.godot/imported/Jura-Regular.ttf-62d29b46673e0192a9deafa2eeea9c39.fontdata"]
 
 [params]
 
