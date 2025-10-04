@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://cev2b0vraoyua"]
-
-[ext_resource type="Script" uid="uid://ihrsl4e2hlcq" path="res://SolarSystem/Scenes/Earth/Earth.cs" id="1_txh1o"]
-
-[node name="Earth" type="Node3D"]
-script = ExtResource("1_txh1o")
