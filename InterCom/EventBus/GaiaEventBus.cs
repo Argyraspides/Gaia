@@ -1,5 +1,5 @@
-using
 using Godot;
+using Daedalus.Logging;
 
 namespace Gaia.InterCom.EventBus;
 
@@ -19,7 +19,7 @@ public partial class GaiaEventBus : Node
   public override void _Ready()
   {
     Instance = this;
-    this.RegisterLogging(true);
+    Logger.RegisterLogging(this, true);
 
     PlanetaryEventBus = new PlanetaryEventBus();
     PlanetaryEventBus.Name = "PlanetaryEventBus";

@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
-using
-using
+using Daedalus.Logging;
+using Daedalus.GodotUtils;
 
 namespace Gaia.PlanetEngine.LoDSystem;
 
@@ -32,7 +32,7 @@ public partial class TerrainQuadTree
       }
       catch (Exception ex)
       {
-        this.LogError($"Error in quadtree update thread: {ex}");
+        Logger.LogError(this, $"Error in quadtree update thread: {ex}");
       }
     }
   }

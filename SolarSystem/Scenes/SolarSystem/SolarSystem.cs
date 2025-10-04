@@ -17,10 +17,9 @@
 */
 
 
-using System;
 using Gaia.PlanetEngine.Utils;
 using Godot;
-
+using Daedalus.Logging;
 using LoDCamera = Gaia.PlanetEngine.LoDSystem.LoDCamera;
 
 public partial class SolarSystem : WorldEnvironment
@@ -37,6 +36,7 @@ public partial class SolarSystem : WorldEnvironment
   public override void _Ready()
   {
     base._Ready();
+    Logger.RegisterLogging(this, true);
     _camera = GetNode<LoDCamera>("LoDCamera");
 
     LoadEarth();
@@ -44,9 +44,9 @@ public partial class SolarSystem : WorldEnvironment
 
   private void LoadEarth()
   {
-    if (!GodotUtils.IsValid(_camera))
+    if (!Daedalus.GodotUtils.GodotUtils.IsValid(_camera))
     {
-      this.LogError("SolarSystem::LoadEarth(): _camera not found!");
+      Logger.LogError(this,"SolarSystem::LoadEarth(): _camera not found!");
       return;
     }
 

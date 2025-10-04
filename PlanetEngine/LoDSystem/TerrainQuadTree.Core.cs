@@ -20,13 +20,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using
-using
 using Gaia.InterCom.EventBus;
 using Gaia.PlanetEngine.MapTiles;
 using Gaia.PlanetEngine.MeshGenerators;
 using Gaia.PlanetEngine.Utils;
 using Godot;
+using Daedalus.Logging;
+using Daedalus.GodotUtils;
 
 namespace Gaia.PlanetEngine.LoDSystem;
 
@@ -67,7 +67,7 @@ public sealed partial class TerrainQuadTree : Node3D
 
     InitializeAltitudeThresholds();
     QuadTreeLoaded += GaiaEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
-    this.RegisterLogging(true);
+    Logger.RegisterLogging(this, true);
   }
 
 
@@ -228,7 +228,7 @@ public sealed partial class TerrainQuadTree : Node3D
   {
     if (!GodotUtils.IsValid(node))
     {
-      this.LogError("TerrainQuadTree::InitializeTerrainNodeMesh: Invalid terrain node!");
+      Logger.LogError(this, "TerrainQuadTree::InitializeTerrainNodeMesh: Invalid terrain node!");
       return;
     }
 

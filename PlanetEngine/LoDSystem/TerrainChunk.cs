@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using Gaia.PlanetEngine.MapDataRetrieval;
 using Gaia.PlanetEngine.MapTiles;
 using Godot;
+using Daedalus.Logging;
+using Daedalus.GodotUtils;
 
 namespace Gaia.PlanetEngine.LoDSystem;
 
@@ -43,7 +45,7 @@ public partial class TerrainChunk : Node3D
     }
 
     MapTile = mapTile;
-    this.RegisterLogging(true);
+    Logger.RegisterLogging(this, true);
   }
 
   public MapTile MapTile { get; }
@@ -68,7 +70,7 @@ public partial class TerrainChunk : Node3D
     }
     else
     {
-      this.LogError("TerrainChunk::Load() - TerrainChunkMesh is not a valid MeshInstance3D");
+      Logger.LogError(this, "TerrainChunk::Load() - TerrainChunkMesh is not a valid MeshInstance3D");
     }
   }
 
@@ -80,7 +82,7 @@ public partial class TerrainChunk : Node3D
     standardShader.AlbedoTexture = texture2D;
     if (!GodotUtils.IsValid(TerrainChunkMesh))
     {
-      this.LogError(
+      Logger.LogError(this,
         "TerrainChunk::ApplyTexture: TerrainChunk texture could not be loaded! The TerrainChunkMesh is invalid!");
       return;
     }
@@ -102,7 +104,7 @@ public partial class TerrainChunk : Node3D
 
     if (mapTile == null)
     {
-      this.LogError(
+      Logger.LogError(this,
         $"==========================================================================\n" +
         $"TerrainChunk::InitializeTerrainChunkAsync() - MapTile could not be loaded!\n" +
         $"Latitude: {MapTile.Latitude}\n" +

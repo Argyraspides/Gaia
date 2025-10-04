@@ -1,8 +1,8 @@
-using
-using
 using Gaia.PlanetEngine.MapTiles;
 using Gaia.PlanetEngine.Utils;
 using Godot;
+using Daedalus.Enums;
+using Daedalus.Images;
 
 namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
 

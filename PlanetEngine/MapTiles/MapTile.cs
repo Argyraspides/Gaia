@@ -1,12 +1,12 @@
 using System;
-using
-using
 using Gaia.PlanetEngine.Utils;
 using Godot;
+using Daedalus.Networking.Cache;
+using Daedalus.Enums;
 
 namespace Gaia.PlanetEngine.MapTiles;
 
-public class MapTile : GaiaResource
+public class MapTile : DaedalusResource
 {
   public MapTile()
   {

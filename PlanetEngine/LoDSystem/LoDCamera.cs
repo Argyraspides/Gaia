@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
-using
 using Gaia.PlanetEngine.Utils;
 using Godot;
+using Daedalus.Logging;
 
 namespace Gaia.PlanetEngine.LoDSystem;
 
@@ -34,7 +34,7 @@ public partial class LoDCamera : Camera3D
 
   public override void _Ready()
   {
-    this.RegisterLogging(true);
+    Logger.RegisterLogging(this, true);
   }
 
   public override void _Input(InputEvent @event)
