@@ -19,7 +19,7 @@
 
 
 using System.Threading.Tasks;
-using Gaia.Common.Utils.Networking.HTTP;
+using
 using Gaia.PlanetEngine.MapTiles;
 
 namespace Gaia.PlanetEngine.MapDataRetrieval;

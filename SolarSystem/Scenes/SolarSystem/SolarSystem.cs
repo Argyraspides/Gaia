@@ -18,8 +18,6 @@
 
 
 using System;
-using Gaia.Common.Utils.Godot;
-using Gaia.Common.Utils.Logging;
 using Gaia.PlanetEngine.Utils;
 using Godot;
 

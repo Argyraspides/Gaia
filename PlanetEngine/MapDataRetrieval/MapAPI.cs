@@ -20,7 +20,7 @@
 
 using System;
 using System.Threading.Tasks;
-using Gaia.Common.Enums;
+using
 using Gaia.PlanetEngine.MapDataRetrieval.Bing;
 using Gaia.PlanetEngine.MapTiles;
 using Gaia.PlanetEngine.Utils;

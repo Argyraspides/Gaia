@@ -18,8 +18,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Gaia.Common.Utils.Godot;
-using Gaia.Common.Utils.Logging;
 using Gaia.PlanetEngine.MapDataRetrieval;
 using Gaia.PlanetEngine.MapTiles;
 using Godot;

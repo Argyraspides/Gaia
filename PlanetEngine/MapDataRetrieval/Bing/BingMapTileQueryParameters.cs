@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Gaia.Common.Enums;
-using Gaia.Common.Utils.Networking.HTTP;
+using
+using
 using Gaia.PlanetEngine.MapTiles;
 
 namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;

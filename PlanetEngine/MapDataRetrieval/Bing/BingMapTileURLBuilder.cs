@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Gaia.Common.Utils.Networking.HTTP;
+using
 
 namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
 
