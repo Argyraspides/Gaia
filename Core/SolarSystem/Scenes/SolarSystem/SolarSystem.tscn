@@ -1,0 +1,27 @@
+[gd_scene load_steps=7 format=3 uid="uid://dxf3hyep4y3iu"]
+
+[ext_resource type="Texture2D" uid="uid://bhjk68tdfdt1l" path="res://Core/SolarSystem/Assets/ESO_-_Milky_Way.jpg" id="1_jbp3p"]
+[ext_resource type="Script" uid="uid://b8mwhumswdquq" path="res://Core/SolarSystem/Scenes/SolarSystem/SolarSystem.cs" id="2_obgtn"]
+[ext_resource type="Script" uid="uid://buo0lk5as552j" path="res://Core/PlanetEngine/LoDSystem/LoDCamera.cs" id="3_jbp3p"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_aw4tg"]
+panorama = ExtResource("1_jbp3p")
+
+[sub_resource type="Sky" id="Sky_bhxmi"]
+sky_material = SubResource("PanoramaSkyMaterial_aw4tg")
+
+[sub_resource type="Environment" id="Environment_xash6"]
+background_mode = 2
+sky = SubResource("Sky_bhxmi")
+
+[node name="SolarSystem" type="WorldEnvironment"]
+environment = SubResource("Environment_xash6")
+script = ExtResource("2_obgtn")
+
+[node name="LoDCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 100000, 0)
+far = 700000.0
+script = ExtResource("3_jbp3p")
+
+[node name="Sun" type="DirectionalLight3D" parent="LoDCamera"]
+directional_shadow_max_distance = 10000.0
