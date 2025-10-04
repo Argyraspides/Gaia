@@ -66,7 +66,7 @@ public sealed partial class TerrainQuadTree : Node3D
     _worldScale = worldScale;
 
     InitializeAltitudeThresholds();
-    QuadTreeLoaded += GlobalEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
+    QuadTreeLoaded += GaiaEventBus.Instance.PlanetaryEventBus.OnTerrainQuadTreeLoaded;
     this.RegisterLogging(true);
   }
 

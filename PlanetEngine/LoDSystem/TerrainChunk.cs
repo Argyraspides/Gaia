@@ -117,4 +117,12 @@ public partial class TerrainChunk : Node3D
 
     ApplyTexture(mapTile.Texture2D);
   }
+
+  public override void _Process(double delta)
+  {
+    if (MapTile.LatitudeTileCoo == 0 && MapTile.LongitudeTileCoo == 0 && this.MapTile.ZoomLevel > 19)
+    {
+      this.LogInfo($"Map Tile 0,0 has position: {this.GlobalPosition.X},{this.GlobalPosition.Y},{this.GlobalPosition.Z}");
+    }
+  }
 }

@@ -7,14 +7,13 @@ namespace Gaia.PlanetEngine.LoDSystem;
 
 public partial class LoDCamera : Camera3D
 {
-
   public double[] AltitudeThresholds { private get; set; }
 
   private float _moveSpeed;
-  public float _altitude = float.MaxValue;
-  private float _maxAltitude = float.MaxValue;
-  private float _minAltitude = 0.0f;
-  private int _currentDepth = 0;
+  private float _altitude = float.MaxValue;
+  private float _maxAltitude = 30_000.0f;
+  private float _minAltitude;
+  private int _currentDepth;
 
   private float _pitch;
   private float _pitchSpeed = 0.001f;
@@ -26,7 +25,6 @@ public partial class LoDCamera : Camera3D
   {
     this.RegisterLogging(true);
   }
-
 
   public override void _Input(InputEvent @event)
   {
@@ -50,6 +48,12 @@ public partial class LoDCamera : Camera3D
     if (_altitude < _minAltitude)
     {
       GlobalPosition = new Vector3(GlobalPosition.X, _minAltitude + 1.0f, GlobalPosition.Z);
+      return;
+    }
+
+    if (_altitude > _maxAltitude)
+    {
+      GlobalPosition = new Vector3(GlobalPosition.X, _maxAltitude - 1.0f, GlobalPosition.Z);
       return;
     }
 
