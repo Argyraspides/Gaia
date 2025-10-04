@@ -17,9 +17,46 @@
 */
 
 
-using Godot;
 using System;
+using Gaia.Common.Utils.Godot;
+using Gaia.Common.Utils.Logging;
+using Gaia.PlanetEngine.Utils;
+using Godot;
+
+using LoDCamera = Gaia.PlanetEngine.LoDSystem.LoDCamera;
 
 public partial class SolarSystem : WorldEnvironment
 {
+
+  private LoDCamera _camera;
+
+  private Earth _earth;
+  private double _earthEquatorialCircumference
+    = PlanetUtils.EarthEquatorialCircumferenceKm;
+  private double _earthPolarCircumference
+    = PlanetUtils.EarthPolarCircumferenceM;
+
+  public override void _Ready()
+  {
+    base._Ready();
+    _camera = GetNode<LoDCamera>("LoDCamera");
+
+    LoadEarth();
+  }
+
+  private void LoadEarth()
+  {
+    if (!GodotUtils.IsValid(_camera))
+    {
+      this.LogError("SolarSystem::LoadEarth(): _camera not found!");
+      return;
+    }
+
+    PackedScene sceneResource = GD.Load<PackedScene>("res://SolarSystem/Scenes/Earth/Earth.tscn");
+    _earth = sceneResource.Instantiate<Earth>();
+
+    _earth.Construct(_camera);
+    AddChild(_earth);
+  }
+
 }

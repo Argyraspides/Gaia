@@ -21,23 +21,24 @@ namespace Gaia.PlanetEngine.MapTiles;
 
 public enum MapType
 {
-    SATELLITE,
-    STREET,
-    HYBRID,
+  Satellite,
+  Street,
+  Hybrid,
 
-    UNKNOWN
+  Unknown
 }
 
 public enum MapTileType
 {
-    WEB_MERCATOR_EARTH, // Standard, FLAT web-mercator projection
-    WEB_MERCATOR_WGS84, // Web mercator projection projected back onto a WGS84 ellipsoid using custom shader
-    MERCURY,
-    VENUS,
-    MARS,
-    JUPITER,
-    SATURN,
-    URANUS,
-    NEPTUNE,
-    UNKNOWN
+  WebMercatorEarth, // Standard, FLAT web-mercator projection
+  WebMercatorWgs84, // Web mercator projection projected back onto a WGS84 ellipsoid using custom shader
+  Mercury,
+  Venus,
+  Mars,
+  Jupiter,
+  Saturn,
+  Uranus,
+  Neptune,
+
+  Unknown
 }

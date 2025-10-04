@@ -19,7 +19,6 @@
 
 
 using System.Threading.Tasks;
-
 using Gaia.Common.Utils.Networking.HTTP;
 using Gaia.PlanetEngine.MapTiles;
 
@@ -27,6 +26,6 @@ namespace Gaia.PlanetEngine.MapDataRetrieval;
 
 public interface IMapProvider<TQueryParameters> where TQueryParameters : IQueryParameters
 {
-    public Task<MapTile> RequestMapTileAsync(TQueryParameters queryParameters);
-    public Task<byte[]> RequestRawMapTileAsync(TQueryParameters queryParameters);
+  public Task<MapTile> RequestMapTile(TQueryParameters queryParameters);
+  public Task<byte[]> RequestRawMapTile(TQueryParameters queryParameters);
 }

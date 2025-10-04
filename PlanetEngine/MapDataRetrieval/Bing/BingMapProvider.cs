@@ -1,22 +1,5 @@
-/*
-
-
-
-
-88        88  88888888888  88888888ba   88b           d88  88888888888  ad88888ba
-88        88  88           88      "8b  888b         d888  88          d8"     "8b
-88        88  88           88      ,8P  88`8b       d8'88  88          Y8,
-88aaaaaaaa88  88aaaaa      88aaaaaa8P'  88 `8b     d8' 88  88aaaaa     `Y8aaaaa,
-88""""""""88  88"""""      88""""88'    88  `8b   d8'  88  88"""""       `"""""8b,
-88        88  88           88    `8b    88   `8b d8'   88  88                  `8b
-88        88  88           88     `8b   88    `888'    88  88          Y8a     a8P
-88        88  88888888888  88      `8b  88     `8'     88  88888888888  "Y88888P"
-
-
-                            MESSENGER OF THE MACHINES
-
-*/
-
+using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Gaia.PlanetEngine.MapTiles;
 
@@ -24,53 +7,52 @@ namespace Gaia.PlanetEngine.MapDataRetrieval.Bing;
 
 public class BingMapProvider : IMapProvider<BingMapTileQueryParameters>
 {
-    private BingMapTileCacher m_bingMapTileCacher;
+  private readonly BingMapTileCacher _bingMapTileCacher;
 
-    public BingMapProvider()
+  public BingMapProvider()
+  {
+    _bingMapTileCacher = new BingMapTileCacher();
+  }
+
+  public async Task<byte[]> RequestRawMapTile(BingMapTileQueryParameters queryParameters) =>
+    throw new NotImplementedException();
+
+  public async Task<MapTile> RequestMapTile(BingMapTileQueryParameters queryParameters)
+  {
+    // Check if resource already exists and return the cached map tile if it does
+    // This partialTile contains enough information to uniquely identify a map tile in the cache
+    var partialTile = new BingMercatorMapTile(
+      queryParameters.QuadKey,
+      queryParameters.MapType,
+      queryParameters.Language,
+      queryParameters.MapImageType
+    );
+
+    if (_bingMapTileCacher.ResourceExists(partialTile))
     {
-        m_bingMapTileCacher = new BingMapTileCacher();
+      BingMercatorMapTile mapTileResource = _bingMapTileCacher.RetrieveResourceFromCache(partialTile);
+      return mapTileResource;
     }
 
-    public async Task<byte[]> RequestRawMapTileAsync(BingMapTileQueryParameters queryParameters)
-    {
-        throw new System.NotImplementedException();
-    }
+    // Otherwise, query Bing (Microsoft is the GOAT right? I make fun of them yet here
+    // I am using C# and the .NET framework)
+    var bingMapTileUrlBuilder = new BingMapTileURLBuilder();
+    string url = bingMapTileUrlBuilder.BuildUrl(queryParameters);
 
-    public async Task<MapTile> RequestMapTileAsync(BingMapTileQueryParameters queryParameters)
-    {
-        // Check if resource already exists and return the cached map tile if it does
-        // This partialTile contains enough information to uniquely identify a map tile in the cache
-        BingMercatorMapTile partialTile = new BingMercatorMapTile(
-            queryParameters.QuadKey,
-            queryParameters.MapType,
-            queryParameters.Language,
-            queryParameters.MapImageType,
-            null
-        );
+    byte[] rawMapData = await new HttpClient().GetByteArrayAsync(url);
 
-        if (m_bingMapTileCacher.ResourceExists(partialTile))
-        {
-            BingMercatorMapTile mapTileResource = m_bingMapTileCacher.RetrieveResourceFromCache(partialTile);
-            return mapTileResource;
-        }
+    // TODO:: Do some error handling here to make sure you don't cache map tiles that are
+    // fucked
+    var bingMercatorMapTile = new BingMercatorMapTile(
+      queryParameters.QuadKey,
+      queryParameters.MapType,
+      queryParameters.Language,
+      queryParameters.MapImageType,
+      rawMapData
+    );
 
-        // Otherwise, query Bing (Microsoft is the GOAT right? I make fun of them yet here
-        // I am using C# and the .NET framework)
-        BingMapTileURLBuilder bingMapTileURLBuilder = new BingMapTileURLBuilder();
-        string url = bingMapTileURLBuilder.BuildUrl(queryParameters);
+    _bingMapTileCacher.CacheResource(bingMercatorMapTile);
 
-        byte[] rawMapData = await new System.Net.Http.HttpClient().GetByteArrayAsync(url);
-
-        BingMercatorMapTile bingMercatorMapTile = new BingMercatorMapTile(
-            queryParameters.QuadKey,
-            queryParameters.MapType,
-            queryParameters.Language,
-            queryParameters.MapImageType,
-            rawMapData
-        );
-
-        m_bingMapTileCacher.CacheResource(bingMercatorMapTile);
-
-        return bingMercatorMapTile;
-    }
+    return bingMercatorMapTile;
+  }
 }

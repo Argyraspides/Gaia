@@ -21,18 +21,20 @@ namespace Gaia.Common.Utils.Caching;
 
 public interface ICacheCapability<GaiaResource>
 {
-    void CacheResource(GaiaResource resource);
-    GaiaResource RetrieveResourceFromCache(string resourceHash);
+  void CacheResource(GaiaResource resource);
+  GaiaResource RetrieveResourceFromCache(string resourceHash);
 
-    /// <summary>
-    /// Can be used to retrieve a resource from cache if the provided resource argument contains enough
-    /// information in order to determine the identity of the full resource with all its fields.
-    /// </summary>
-    /// <param name="partialResource"> The resource with parts of its fields filled out which contains the necessary information
-    /// to uniquely identify the entire resource</param>
-    /// <returns></returns>
-    GaiaResource RetrieveResourceFromCache(GaiaResource partialResource);
+  /// <summary>
+  ///   Can be used to retrieve a resource from cache if the provided resource argument contains enough
+  ///   information in order to determine the identity of the full resource with all its fields.
+  /// </summary>
+  /// <param name="partialResource">
+  ///   The resource with parts of its fields filled out which contains the necessary information
+  ///   to uniquely identify the entire resource
+  /// </param>
+  /// <returns></returns>
+  GaiaResource RetrieveResourceFromCache(GaiaResource partialResource);
 
-    bool ResourceExists(string resourceHash);
-    bool ResourceExists(GaiaResource partialResource);
+  bool ResourceExists(string resourceHash);
+  bool ResourceExists(GaiaResource partialResource);
 }
