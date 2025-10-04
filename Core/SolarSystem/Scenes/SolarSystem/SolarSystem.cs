@@ -50,7 +50,7 @@ public partial class SolarSystem : WorldEnvironment
       return;
     }
 
-    PackedScene sceneResource = GD.Load<PackedScene>("res://SolarSystem/Scenes/Earth/Earth.tscn");
+    PackedScene sceneResource = GD.Load<PackedScene>("res://Core/SolarSystem/Scenes/Earth/Earth.tscn");
     _earth = sceneResource.Instantiate<Earth>();
 
     _earth.Construct(_camera);
