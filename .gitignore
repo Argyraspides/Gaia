@@ -5,3 +5,4 @@
 # JetBrains/VSCode
 .vscode/
 .idea/
+*.DotSettings.*
