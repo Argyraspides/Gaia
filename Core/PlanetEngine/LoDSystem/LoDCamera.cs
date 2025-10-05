@@ -53,6 +53,7 @@ public partial class LoDCamera : Camera3D
     if (@event is InputEventMouseButton mouseButton)
     {
       _isDragging = mouseButton.Pressed;
+      _lastMousePos = mouseButton.Position;
       return;
     }
 
@@ -64,8 +65,8 @@ public partial class LoDCamera : Camera3D
         _lastMousePos = mouseMotion.Position;
         float verticalFov = Mathf.DegToRad(Fov);
         float horizontalFov = 2 * Mathf.Atan(Mathf.Tan(verticalFov / 2) * ( GetViewport().GetVisibleRect().Size.X / GetViewport().GetVisibleRect().Size.Y ));
-        float realXCooPerPixel = _altitude * (Mathf.Tan(horizontalFov / 2) / GetViewport().GetVisibleRect().Size.X);
-        float realYCooPerPixel = _altitude * (Mathf.Tan(verticalFov / 2) / GetViewport().GetVisibleRect().Size.Y);
+        float realXCooPerPixel = 2 * _altitude * (Mathf.Tan(horizontalFov / 2) / GetViewport().GetVisibleRect().Size.X);
+        float realYCooPerPixel = 2 * _altitude * (Mathf.Tan(verticalFov / 2) / GetViewport().GetVisibleRect().Size.Y);
         float xCooMove = deltaPos.X * realXCooPerPixel;
         float yCooMove = deltaPos.Y * realYCooPerPixel;
         Position = new Vector3(Position.X + xCooMove, Position.Y, Position.Z + yCooMove);
