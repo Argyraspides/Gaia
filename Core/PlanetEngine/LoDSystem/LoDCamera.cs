@@ -50,6 +50,17 @@ public partial class LoDCamera : Camera3D
 
   public override void _Input(InputEvent @event)
   {
+    HandleMouseDragControl(@event);
+  }
+
+  /// <summary>
+  /// Handles LoD camera dragging controls. The intended effect is that the mouse cursor stays over the exact same lat/lon
+  /// position on the planet as you drag around ... though this function assumes you're always looking top-down.
+  /// Will definitely have to change when we introduce 3D and the camera can tilt
+  /// </summary>
+  /// <param name="event"></param>
+  private void HandleMouseDragControl(InputEvent @event)
+  {
     if (@event is InputEventMouseButton mouseButton)
     {
       _isDragging = mouseButton.Pressed;
@@ -61,14 +72,22 @@ public partial class LoDCamera : Camera3D
     {
       if (_isDragging)
       {
-        Vector2 deltaPos = _lastMousePos - mouseMotion.Position;
+        Vector2 mouseMoveDelta = _lastMousePos - mouseMotion.Position;
         _lastMousePos = mouseMotion.Position;
+
+        Vector2 viewportSize = GetViewport().GetVisibleRect().Size;
+
         float verticalFov = Mathf.DegToRad(Fov);
-        float horizontalFov = 2 * Mathf.Atan(Mathf.Tan(verticalFov / 2) * ( GetViewport().GetVisibleRect().Size.X / GetViewport().GetVisibleRect().Size.Y ));
-        float realXCooPerPixel = 2 * _altitude * (Mathf.Tan(horizontalFov / 2) / GetViewport().GetVisibleRect().Size.X);
-        float realYCooPerPixel = 2 * _altitude * (Mathf.Tan(verticalFov / 2) / GetViewport().GetVisibleRect().Size.Y);
-        float xCooMove = deltaPos.X * realXCooPerPixel;
-        float yCooMove = deltaPos.Y * realYCooPerPixel;
+        float tanVertHalfFov = Mathf.Tan(verticalFov / 2);
+
+        float horizontalFov = 2 * Mathf.Atan(tanVertHalfFov * (viewportSize.X / viewportSize.Y));
+
+        float realXCooPerPixel = 2 * _altitude * (Mathf.Tan(horizontalFov / 2) / viewportSize.X);
+        float realYCooPerPixel = 2 * _altitude * (tanVertHalfFov / viewportSize.Y);
+
+        float xCooMove = mouseMoveDelta.X * realXCooPerPixel;
+        float yCooMove = mouseMoveDelta.Y * realYCooPerPixel;
+
         Position = new Vector3(Position.X + xCooMove, Position.Y, Position.Z + yCooMove);
       }
     }
