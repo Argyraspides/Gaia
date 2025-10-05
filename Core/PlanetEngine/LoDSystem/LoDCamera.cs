@@ -70,10 +70,8 @@ public partial class LoDCamera : Camera3D
       return;
     }
 
-    if (@event is InputEventMouseMotion mouseMotion)
+    if (@event is InputEventMouseMotion mouseMotion && _isDragging)
     {
-      if (_isDragging)
-      {
         Vector2 mouseMoveDelta = _lastMousePos - mouseMotion.Position;
         _lastMousePos = mouseMotion.Position;
 
@@ -91,7 +89,6 @@ public partial class LoDCamera : Camera3D
         float yCooMove = mouseMoveDelta.Y * realYCooPerPixel;
 
         Position = new Vector3(Position.X + xCooMove, Position.Y, Position.Z + yCooMove);
-      }
     }
   }
 
