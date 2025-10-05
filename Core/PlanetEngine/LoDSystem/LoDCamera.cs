@@ -16,12 +16,13 @@ public partial class LoDCamera : Camera3D
     {
      _altitudeThresholds = value;
      _minAltitude = (float)_altitudeThresholds.Last();
+     _maxAltitude = (float)_altitudeThresholds.First();
     }
   }
 
   private float _moveSpeed;
   private float _altitude = float.MaxValue;
-  // TODO::ARGYRASPIDES() { These are hardcoded, later on just make them tied to the actual zoom level }
+
   private float _maxAltitude = 30_000.0f;
   private float _minAltitude = 0.20f;
   private int _currentDepth;
@@ -55,8 +56,9 @@ public partial class LoDCamera : Camera3D
 
   /// <summary>
   /// Handles LoD camera dragging controls. The intended effect is that the mouse cursor stays over the exact same lat/lon
-  /// position on the planet as you drag around ... though this function assumes you're always looking top-down.
-  /// Will definitely have to change when we introduce 3D and the camera can tilt
+  /// position on the planet as you drag around ... though this function assumes you're always looking top-down (and that we
+  /// are staring at a flat arrangement).
+  /// Will definitely have to change when we introduce 3D (globe earth and stuff)
   /// </summary>
   /// <param name="event"></param>
   private void HandleMouseDragControl(InputEvent @event)
