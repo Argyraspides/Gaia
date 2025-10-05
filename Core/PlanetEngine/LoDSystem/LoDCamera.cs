@@ -16,12 +16,13 @@ public partial class LoDCamera : Camera3D
     {
      _altitudeThresholds = value;
      _minAltitude = (float)_altitudeThresholds.Last();
+     _maxAltitude = (float)_altitudeThresholds.First();
     }
   }
 
   private float _moveSpeed;
   private float _altitude = float.MaxValue;
-  // TODO::ARGYRASPIDES() { These are hardcoded, later on just make them tied to the actual zoom level }
+
   private float _maxAltitude = 30_000.0f;
   private float _minAltitude = 0.20f;
   private int _currentDepth;
@@ -32,13 +33,12 @@ public partial class LoDCamera : Camera3D
   private float _yaw;
   private float _yawSpeed = 0.001f;
 
+  private bool _isDragging;
+  private Vector2 _lastMousePos;
+
   public override void _Ready()
   {
     Logger.RegisterLogging(this, true);
-  }
-
-  public override void _Input(InputEvent @event)
-  {
   }
 
   public override void _Process(double delta)
@@ -47,6 +47,49 @@ public partial class LoDCamera : Camera3D
     ProcessMoveAround((float)delta);
     AdjustSpeed();
     UpdateProperties();
+  }
+
+  public override void _Input(InputEvent @event)
+  {
+    HandleMouseDragControl(@event);
+  }
+
+  /// <summary>
+  /// Handles LoD camera dragging controls. The intended effect is that the mouse cursor stays over the exact same lat/lon
+  /// position on the planet as you drag around ... though this function assumes you're always looking top-down (and that we
+  /// are staring at a flat arrangement).
+  /// Will definitely have to change when we introduce 3D (globe earth and stuff)
+  /// </summary>
+  /// <param name="event"></param>
+  private void HandleMouseDragControl(InputEvent @event)
+  {
+    if (@event is InputEventMouseButton mouseButton)
+    {
+      _isDragging = mouseButton.Pressed;
+      _lastMousePos = mouseButton.Position;
+      return;
+    }
+
+    if (@event is InputEventMouseMotion mouseMotion && _isDragging)
+    {
+        Vector2 mouseMoveDelta = _lastMousePos - mouseMotion.Position;
+        _lastMousePos = mouseMotion.Position;
+
+        Vector2 viewportSize = GetViewport().GetVisibleRect().Size;
+
+        float verticalFov = Mathf.DegToRad(Fov);
+        float tanVertHalfFov = Mathf.Tan(verticalFov / 2);
+
+        float horizontalFov = 2 * Mathf.Atan(tanVertHalfFov * (viewportSize.X / viewportSize.Y));
+
+        float realXCooPerPixel = 2 * _altitude * (Mathf.Tan(horizontalFov / 2) / viewportSize.X);
+        float realYCooPerPixel = 2 * _altitude * (tanVertHalfFov / viewportSize.Y);
+
+        float xCooMove = mouseMoveDelta.X * realXCooPerPixel;
+        float yCooMove = mouseMoveDelta.Y * realYCooPerPixel;
+
+        Position = new Vector3(Position.X + xCooMove, Position.Y, Position.Z + yCooMove);
+    }
   }
 
   private void UpdateProperties()
