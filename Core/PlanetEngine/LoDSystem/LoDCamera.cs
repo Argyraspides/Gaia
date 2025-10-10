@@ -21,10 +21,11 @@ public partial class LoDCamera : Camera3D
   }
 
   private float _moveSpeed;
+  [Export] private float _scrollMoveSpeedFactor = 0.1f;
   private float _altitude = float.MaxValue;
 
-  private float _maxAltitude = 30_000.0f;
-  private float _minAltitude = 0.20f;
+  [Export] private float _maxAltitude = 30_000.0f;
+  [Export] private float _minAltitude = 0.20f;
   private int _currentDepth;
 
   private float _pitch;
@@ -52,6 +53,7 @@ public partial class LoDCamera : Camera3D
   public override void _Input(InputEvent @event)
   {
     HandleMouseDragControl(@event);
+    HandleMouseZoomControl(@event);
   }
 
   /// <summary>
@@ -90,6 +92,25 @@ public partial class LoDCamera : Camera3D
 
         Position = new Vector3(Position.X + xCooMove, Position.Y, Position.Z + yCooMove);
     }
+  }
+
+  private void HandleMouseZoomControl(InputEvent @event)
+  {
+    if (@event is not InputEventMouseButton mouseButton)
+    {
+      return;
+    }
+
+    switch( mouseButton.ButtonIndex )
+    {
+      case MouseButton.WheelUp:
+        Transform = Transform.Translated(Vector3.Down* _moveSpeed * _scrollMoveSpeedFactor);
+        break;
+      case MouseButton.WheelDown:
+        Transform = Transform.Translated(Vector3.Up * _moveSpeed * _scrollMoveSpeedFactor);
+        break;
+    }
+
   }
 
   private void UpdateProperties()
