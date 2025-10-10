@@ -1,0 +1,3 @@
+[submodule "External/Daedalus"]
+	path = External/Daedalus
+	url = https://github.com/Argyraspides/Daedalus.git
