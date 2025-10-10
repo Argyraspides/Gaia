@@ -110,7 +110,6 @@ public partial class LoDCamera : Camera3D
         Transform = Transform.Translated(Vector3.Up * _moveSpeed * _scrollMoveSpeedFactor);
         break;
     }
-
   }
 
   private void UpdateProperties()
